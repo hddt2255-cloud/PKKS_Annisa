@@ -11,6 +11,8 @@ import urllib.request
 import shutil
 
 DEFAULT_APPS_SCRIPT_URL = "https://pkks-b9f13-default-rtdb.firebaseio.com/"
+DEFAULT_GDRIVE_FOLDER_ID = "1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x"
+DEFAULT_GDRIVE_EXEC_URL = "https://script.google.com/macros/s/AKfycbykNKnIhlwXTr-u6OX7rBbAmyyWq1J3OKtJUOQ5ocg1yowiyswFIUEByRbipMQN9qBM/exec"
 
 def to_firebase_key(s):
     return re.sub(r'[.$#\[\]/\s]+', '_', str(s or 'unknown'))
@@ -21,15 +23,45 @@ def normalize_firebase_url(url=None):
         return DEFAULT_APPS_SCRIPT_URL.rstrip('/')
     return raw.rstrip('/')
 
+def extract_gdrive_folder_id(url_or_id):
+    if not url_or_id:
+        return None
+    url_or_id = str(url_or_id).strip()
+    if 'folders/' in url_or_id:
+        return url_or_id.split('folders/')[1].split('?')[0].split('/')[0]
+    elif 'id=' in url_or_id:
+        return url_or_id.split('id=')[1].split('&')[0]
+    elif len(url_or_id) > 10 and '/' not in url_or_id and '.' not in url_or_id:
+        return url_or_id
+    return None
+
 def bg_upload(file_content, filename, mime_type, apps_script_url, user_name, folder_id="", user_id="admin", item_id="1.1", file_id="", npsn="20231556"):
     try:
         base_url = normalize_firebase_url(apps_script_url)
+        active_folder_id = extract_gdrive_folder_id(folder_id) or DEFAULT_GDRIVE_FOLDER_ID
         b64_data = base64.b64encode(file_content).decode('utf-8')
-        data_url = f"data:{mime_type};base64,{b64_data}"
         safe_npsn = to_firebase_key(npsn or "20231556")
         safe_file_id = to_firebase_key(file_id or filename)
         size_str = f"{round(len(file_content) / 1024, 1)} KB"
 
+        # 1. Unggah & simpan fisik berkas LANGSUNG ke Google Drive (bukan ke Firebase)
+        if active_folder_id and DEFAULT_GDRIVE_EXEC_URL:
+            try:
+                gdrive_payload = urllib.parse.urlencode({
+                    'filename': filename,
+                    'mimeType': mime_type,
+                    'file': b64_data,
+                    'user': user_name or 'Pengunggah',
+                    'folderId': active_folder_id
+                }).encode('utf-8')
+                req_gd = urllib.request.Request(DEFAULT_GDRIVE_EXEC_URL, data=gdrive_payload, method='POST')
+                req_gd.add_header('Content-Type', 'application/x-www-form-urlencoded')
+                urllib.request.urlopen(req_gd, timeout=60)
+                print(f"Direct upload to Google Drive ({active_folder_id}) successful for {filename}")
+            except Exception as gd_err:
+                print(f"Google Drive upload notice for {filename}: {gd_err}")
+
+        # 2. Gunakan Firebase HANYA sebagai jembatan metadata & kepemilikan user (tanpa menyimpan file/dataUrl)
         meta_record = {
             'id': file_id or safe_file_id,
             'fileKey': file_id or safe_file_id,
@@ -43,20 +75,12 @@ def bg_upload(file_content, filename, mime_type, apps_script_url, user_name, fol
             'user': user_name or 'Pengunggah',
             'userId': user_id or 'admin',
             'npsn': str(npsn or '20231556'),
-            'folder': 'PKKS 2026',
-            'isDrive': False,
-            'isFirebase': True
+            'folder': 'Google Drive',
+            'driveFolderId': active_folder_id,
+            'driveUrl': f"https://drive.google.com/drive/folders/{active_folder_id}",
+            'isDrive': True,
+            'isFirebaseBridge': True
         }
-        full_record = dict(meta_record)
-        full_record['dataUrl'] = data_url
-
-        req_full = urllib.request.Request(
-            f"{base_url}/pkks_files/{safe_npsn}/{safe_file_id}.json",
-            data=json.dumps(full_record).encode('utf-8'),
-            method='PUT'
-        )
-        req_full.add_header('Content-Type', 'application/json')
-        urllib.request.urlopen(req_full, timeout=60)
 
         req_meta = urllib.request.Request(
             f"{base_url}/pkks_file_meta/{safe_npsn}/{safe_file_id}.json",
@@ -66,13 +90,14 @@ def bg_upload(file_content, filename, mime_type, apps_script_url, user_name, fol
         req_meta.add_header('Content-Type', 'application/json')
         urllib.request.urlopen(req_meta, timeout=30)
 
-        print(f"Background sync to Firebase successful for {filename}")
+        print(f"Firebase bridge metadata sync successful for {filename}")
     except Exception as e:
-        print(f"Background Firebase upload failed for {filename}: {e}")
+        print(f"Background upload/bridge sync notice for {filename}: {e}")
 
 def bg_delete(filename, apps_script_url, folder_id="", file_id="", npsn="20231556"):
     try:
         base_url = normalize_firebase_url(apps_script_url)
+        active_folder_id = extract_gdrive_folder_id(folder_id) or DEFAULT_GDRIVE_FOLDER_ID
         safe_npsn = to_firebase_key(npsn or "20231556")
         keys_to_delete = set()
         if file_id:
@@ -80,8 +105,25 @@ def bg_delete(filename, apps_script_url, folder_id="", file_id="", npsn="2023155
         if filename:
             keys_to_delete.add(to_firebase_key(filename))
 
+        # 1. Hapus langsung dari Google Drive
+        if active_folder_id and DEFAULT_GDRIVE_EXEC_URL and filename:
+            try:
+                del_payload = urllib.parse.urlencode({
+                    'action': 'delete',
+                    'fileName': filename,
+                    'filename': filename,
+                    'file': filename,
+                    'folderId': active_folder_id
+                }).encode('utf-8')
+                req_gd = urllib.request.Request(DEFAULT_GDRIVE_EXEC_URL, data=del_payload, method='POST')
+                req_gd.add_header('Content-Type', 'application/x-www-form-urlencoded')
+                urllib.request.urlopen(req_gd, timeout=30)
+            except Exception:
+                pass
+
+        # 2. Hapus catatan metadata dari jembatan Firebase
         for k in keys_to_delete:
-            for node in ['pkks_files', 'pkks_file_meta']:
+            for node in ['pkks_file_meta', 'pkks_files']:
                 try:
                     req = urllib.request.Request(
                         f"{base_url}/{node}/{safe_npsn}/{k}.json",
@@ -90,9 +132,10 @@ def bg_delete(filename, apps_script_url, folder_id="", file_id="", npsn="2023155
                     urllib.request.urlopen(req, timeout=30)
                 except Exception:
                     pass
-        print(f"Background delete from Firebase successful for {filename}")
+
+        print(f"Background delete from Google Drive & Firebase bridge successful for {filename}")
     except Exception as e:
-        print(f"Background Firebase delete failed for {filename}: {e}")
+        print(f"Background delete notice for {filename}: {e}")
 
 
 
@@ -154,7 +197,7 @@ DEFAULT_SETTINGS = {
   "namaKepalaSekolah": "Abdul Yakub, S.Ag",
   "defaultPassword": "Sditannisa",
   "tanggalCetak": "Bekasi, 29 September 2026",
-  "googleDriveLink": "",
+  "googleDriveLink": DEFAULT_GDRIVE_FOLDER_ID,
   "appsScriptUrl": DEFAULT_APPS_SCRIPT_URL,
   "users": INITIAL_USERS
 }
@@ -171,6 +214,8 @@ def load_settings(data_dir=None):
                         data[k] = v
                 if not data.get('appsScriptUrl') or 'script.google.com' in str(data.get('appsScriptUrl', '')):
                     data['appsScriptUrl'] = DEFAULT_APPS_SCRIPT_URL
+                if not data.get('googleDriveLink') or not str(data.get('googleDriveLink', '')).strip():
+                    data['googleDriveLink'] = DEFAULT_GDRIVE_FOLDER_ID
                 users = data.get('users', [])
                 if isinstance(users, list) and not any(u.get('id') == 'admin' for u in users):
                     kepsek = data.get('namaKepalaSekolah', 'Abdul Yakub, S.Ag')
@@ -187,24 +232,14 @@ def save_settings(data, data_dir=None):
         return
     if not data.get('appsScriptUrl') or 'script.google.com' in str(data.get('appsScriptUrl', '')):
         data['appsScriptUrl'] = DEFAULT_APPS_SCRIPT_URL
+    if not data.get('googleDriveLink') or not str(data.get('googleDriveLink', '')).strip():
+        data['googleDriveLink'] = DEFAULT_GDRIVE_FOLDER_ID
     settings_file = os.path.join(data_dir, 'settings.json')
     try:
         with open(settings_file, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"Error saving settings.json: {e}")
-
-def extract_gdrive_folder_id(url_or_id):
-    if not url_or_id:
-        return None
-    url_or_id = url_or_id.strip()
-    if 'folders/' in url_or_id:
-        return url_or_id.split('folders/')[1].split('?')[0].split('/')[0]
-    elif 'id=' in url_or_id:
-        return url_or_id.split('id=')[1].split('&')[0]
-    elif len(url_or_id) > 15 and '/' not in url_or_id and '.' not in url_or_id:
-        return url_or_id
-    return None
 
 def upload_file_to_gdrive_api(file_path, orig_name, user_name, folder_link_or_id):
     creds_file = os.path.join(BASE_DIR, 'credentials.json')
@@ -1175,8 +1210,8 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 print(f"Error removing physical file {safe_name}: {e}")
 
                     apps_script_url = load_settings(self.get_dirs()[2]).get('appsScriptUrl', '') or DEFAULT_APPS_SCRIPT_URL
-                    gdrive_folder_link = load_settings(self.get_dirs()[2]).get('googleDriveLink', '')
-                    folder_id = extract_gdrive_folder_id(gdrive_folder_link) or ""
+                    gdrive_folder_link = load_settings(self.get_dirs()[2]).get('googleDriveLink', '') or DEFAULT_GDRIVE_FOLDER_ID
+                    folder_id = extract_gdrive_folder_id(gdrive_folder_link) or DEFAULT_GDRIVE_FOLDER_ID
                     if apps_script_url:
                         t = threading.Thread(target=bg_delete, args=(safe_name, apps_script_url, folder_id, file_id, school_npsn))
                         t.start()
@@ -1289,8 +1324,8 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                                     os.fsync(f.fileno())
 
                             file_url = f"/api/pdf-bytes?npsn={school_npsn}&file={urllib.parse.quote(unique_name)}"
-                            gdrive_folder_link = load_settings(self.get_dirs()[2]).get('googleDriveLink', '')
-                            folder_id = extract_gdrive_folder_id(gdrive_folder_link) or ""
+                            gdrive_folder_link = load_settings(self.get_dirs()[2]).get('googleDriveLink', '') or DEFAULT_GDRIVE_FOLDER_ID
+                            folder_id = extract_gdrive_folder_id(gdrive_folder_link) or DEFAULT_GDRIVE_FOLDER_ID
                             apps_script_url = load_settings(self.get_dirs()[2]).get('appsScriptUrl', '') or DEFAULT_APPS_SCRIPT_URL
                             
                             if apps_script_url:
@@ -1313,6 +1348,8 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 "name": unique_name,
                                 "savedName": unique_name,
                                 "url": file_url,
+                                "driveFolderId": folder_id,
+                                "driveUrl": f"https://drive.google.com/drive/folders/{folder_id}",
                                 "isDrive": False,
                                 "isFirebase": True,
                                 "firebaseSynced": False,
@@ -1328,7 +1365,7 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({
                 "status": "success",
-                "message": f"File berhasil disimpan ke folder {PKKS_FOLDER_NAME} & Firebase!",
+                "message": f"File berhasil disimpan ke folder {PKKS_FOLDER_NAME}, Google Drive & Firebase!",
                 "files": uploaded_files
             }).encode('utf-8'))
             return

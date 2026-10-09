@@ -339,6 +339,8 @@
                            (!window.location.port && !['localhost', '127.0.0.1'].includes(window.location.hostname));
 
     const PERMANENT_APPS_SCRIPT_URL = "https://pkks-b9f13-default-rtdb.firebaseio.com/";
+    const DEFAULT_GDRIVE_FOLDER_ID = "1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x";
+    const DEFAULT_GDRIVE_EXEC_URL = "https://script.google.com/macros/s/AKfycbykNKnIhlwXTr-u6OX7rBbAmyyWq1J3OKtJUOQ5ocg1yowiyswFIUEByRbipMQN9qBM/exec";
 
     function normalizeFirebaseUrl(url) {
       let u = String(url || PERMANENT_APPS_SCRIPT_URL || '').trim();
@@ -541,16 +543,19 @@
       return urlOrId;
     }
 
-    async function uploadFileToFirebase(file, filename, userName, userId, itemId, fileId, npsn, firebaseUrl) {
+    async function uploadFileToFirebase(file, filename, userName, userId, itemId, fileId, npsn, firebaseUrl, gdriveLink) {
       try {
         npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
+        const s = getSchoolSettings(npsn);
+        const rawDriveLink = gdriveLink || (s && s.googleDriveLink) || DEFAULT_GDRIVE_FOLDER_ID;
+        const folderId = extractFolderId(rawDriveLink) || DEFAULT_GDRIVE_FOLDER_ID;
         const baseUrl = normalizeFirebaseUrl(firebaseUrl);
         const safeNpsn = toFirebaseKey(npsn);
         const fId = fileId || ('file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
         const safeFileId = toFirebaseKey(fId);
-        const safeSavedName = toFirebaseKey(filename);
         const isLogo = String(filename || '').startsWith('logo_sekolah_');
 
+        const driveFolderUrl = `https://drive.google.com/drive/folders/${folderId}`;
         const metaObj = {
           id: fId,
           fileKey: fId,
@@ -563,9 +568,12 @@
           user: userName || 'Pengunggah',
           userId: userId || 'admin',
           npsn: npsn,
-          folder: 'Firebase Cloud',
-          isDrive: false,
-          isFirebase: true,
+          folder: 'Google Drive',
+          driveFolderId: folderId,
+          driveUrl: driveFolderUrl,
+          url: '',
+          isDrive: true,
+          isFirebaseBridge: true,
           timestamp: Date.now()
         };
 
@@ -573,42 +581,44 @@
           saveLocalFileMeta(npsn, metaObj);
         }
 
+        // 1. Unggah & simpan fisik berkas LANGSUNG ke Google Drive (BUKAN ke Firebase)
         const dataUrl = await readFileAsDataUrl(file);
-        if (!dataUrl) return metaObj;
+        if (dataUrl && folderId && DEFAULT_GDRIVE_EXEC_URL) {
+          const b64Parts = String(dataUrl).split(',');
+          const b64Data = b64Parts.length > 1 ? b64Parts[1] : b64Parts[0];
+          const p = new URLSearchParams();
+          p.append('filename', filename);
+          p.append('mimeType', metaObj.mimeType);
+          p.append('file', b64Data);
+          p.append('user', userName || 'Pengunggah');
+          p.append('folderId', folderId);
 
-        const fullPayload = Object.assign({}, metaObj, { dataUrl: dataUrl });
-
-        const requests = [
-          originalFetch(`${baseUrl}/pkks_files/${safeNpsn}/${safeFileId}.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(fullPayload)
-          })
-        ];
-
-        if (!isLogo) {
-          requests.push(
-            originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${safeFileId}.json`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(metaObj)
-            })
-          );
-        } else if (safeSavedName && safeSavedName !== safeFileId) {
-          requests.push(
-            originalFetch(`${baseUrl}/pkks_files/${safeNpsn}/${safeSavedName}.json`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(fullPayload)
-            })
-          );
+          // Kirim langsung ke Google Drive via Web App
+          originalFetch(DEFAULT_GDRIVE_EXEC_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: p
+          }).then(() => {
+            console.log("[GDrive] Berkas langsung disimpan ke Google Drive folder:", folderId, filename);
+          }).catch(err => {
+            console.warn("[GDrive] Upload notice:", err);
+          });
         }
 
-        await Promise.allSettled(requests);
-        console.log("[Firebase] Berhasil mengunggah berkas ke Firebase:", filename);
+        // 2. Gunakan Firebase HANYA sebagai jembatan (sinkronisasi metadata & kepemilikan user tanpa menyimpan file/dataUrl)
+        if (!isLogo) {
+          await originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${safeFileId}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(metaObj)
+          }).catch(() => {});
+        }
+
+        console.log("[Jembatan Firebase -> GDrive] Metadata disinkronkan via Firebase & berkas diunggah ke GDrive:", filename);
         return metaObj;
       } catch (e) {
-        console.warn("[Firebase] Upload notice:", e);
+        console.warn("[Jembatan Firebase -> GDrive] Notice:", e);
         return null;
       }
     }
@@ -618,11 +628,13 @@
       const userId = extraMeta.userId || (window.state && window.state.currentUser ? window.state.currentUser.id : 'admin');
       const itemId = extraMeta.itemId || '1.1';
       const fileId = extraMeta.fileId || ('file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
-      return uploadFileToFirebase(file, filename, userName, userId, itemId, fileId, npsn, appsScriptUrl);
+      return uploadFileToFirebase(file, filename, userName, userId, itemId, fileId, npsn, appsScriptUrl, folderId);
     }
 
     async function deleteFileFromGDriveBackground(filename, folderId, appsScriptUrl, extraMeta = {}) {
       const npsn = extraMeta.npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
+      const s = getSchoolSettings(npsn);
+      const activeFolderId = extractFolderId(folderId || (s && s.googleDriveLink) || DEFAULT_GDRIVE_FOLDER_ID) || DEFAULT_GDRIVE_FOLDER_ID;
       const fileId = extraMeta.fileId || '';
       const fileKey = extraMeta.fileKey || fileId || '';
       const origName = extraMeta.origName || '';
@@ -652,71 +664,43 @@
         keysToDelete.forEach(sKey => {
           if (!sKey) return;
           delPromises.push(
-            originalFetch(`${baseUrl}/pkks_files/${safeNpsn}/${sKey}.json`, { method: 'DELETE' }),
-            originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${sKey}.json`, { method: 'DELETE' })
+            originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${sKey}.json`, { method: 'DELETE' }),
+            originalFetch(`${baseUrl}/pkks_files/${safeNpsn}/${sKey}.json`, { method: 'DELETE' })
           );
         });
 
-        // Also sync cleaned owner data to Firebase if ownerUserId is known
+        // Also sync cleaned owner data to Firebase bridge if ownerUserId is known
         if (ownerUserId && ownerUserId !== 'all' && ownerUserId !== 'semua') {
           const ownerData = getSchoolUserData(npsn, ownerUserId);
           delPromises.push(syncUserDataToFirebase(npsn, ownerUserId, ownerData, baseUrl));
         }
 
+        // Hapus berkas langsung dari folder Google Drive menggunakan URLSearchParams
+        if (activeFolderId && DEFAULT_GDRIVE_EXEC_URL && filename) {
+          const p = new URLSearchParams();
+          p.append('action', 'delete');
+          p.append('fileName', filename);
+          p.append('filename', filename);
+          p.append('file', filename);
+          p.append('folderId', activeFolderId);
+
+          originalFetch(DEFAULT_GDRIVE_EXEC_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: p
+          }).catch(() => {});
+        }
+
         await Promise.allSettled(delPromises);
-        console.log(`[Firebase] Berhasil menghapus berkas "${filename}" dari Firebase`);
+        console.log(`[Jembatan Firebase -> GDrive] Berhasil menghapus berkas "${filename}" dari GDrive & jembatan Firebase`);
       } catch (err) {
-        console.warn(`[Firebase] Gagal menghapus berkas "${filename}":`, err);
+        console.warn(`[Jembatan Firebase -> GDrive] Gagal menghapus berkas "${filename}":`, err);
       }
     }
 
     async function fetchFileBlobFromFirebase(npsn, fileObjOrName, firebaseUrl) {
-      try {
-        npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
-        const s = getSchoolSettings(npsn);
-        const baseUrl = normalizeFirebaseUrl(firebaseUrl || s.appsScriptUrl);
-        const safeNpsn = toFirebaseKey(npsn);
-
-        const candidateKeys = [];
-        if (fileObjOrName && typeof fileObjOrName === 'object') {
-          if (fileObjOrName.fileKey) candidateKeys.push(fileObjOrName.fileKey);
-          if (fileObjOrName.id) candidateKeys.push(fileObjOrName.id);
-          if (fileObjOrName.savedName) candidateKeys.push(fileObjOrName.savedName);
-          if (fileObjOrName.name) candidateKeys.push(fileObjOrName.name);
-        } else if (typeof fileObjOrName === 'string') {
-          candidateKeys.push(fileObjOrName);
-          const localMap = getLocalFileMetaMap(npsn);
-          Object.values(localMap).forEach(m => {
-            if (m && (m.savedName === fileObjOrName || m.name === fileObjOrName || m.id === fileObjOrName)) {
-              if (m.fileKey) candidateKeys.unshift(m.fileKey);
-              if (m.id) candidateKeys.unshift(m.id);
-            }
-          });
-        }
-
-        const tried = new Set();
-        for (const rawKey of candidateKeys) {
-          const sKey = toFirebaseKey(rawKey);
-          if (!sKey || tried.has(sKey)) continue;
-          tried.add(sKey);
-
-          const res = await originalFetch(`${baseUrl}/pkks_files/${safeNpsn}/${sKey}.json`);
-          if (res && res.ok) {
-            const record = await res.json();
-            if (record && record.dataUrl) {
-              const blob = dataUrlToBlob(record.dataUrl, record.mimeType || 'application/octet-stream');
-              if (blob) {
-                if (record.id) await PkksFileDB.set(record.id, blob);
-                if (record.savedName) await PkksFileDB.set(record.savedName, blob);
-                if (record.name) await PkksFileDB.set(record.name, blob);
-                return blob;
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("[Firebase] fetchFileBlobFromFirebase error:", e);
-      }
+      // Firebase hanya menjadi jembatan metadata (tidak menyimpan file biner)
       return null;
     }
 
@@ -889,6 +873,10 @@
             parsed.appsScriptUrl = PERMANENT_APPS_SCRIPT_URL;
             needsUpdate = true;
           }
+          if (!parsed.googleDriveLink || !String(parsed.googleDriveLink).trim()) {
+            parsed.googleDriveLink = DEFAULT_GDRIVE_FOLDER_ID;
+            needsUpdate = true;
+          }
           if (Array.isArray(parsed.users) && !parsed.users.some(u => u.id === 'admin')) {
             const kepsekName = parsed.namaKepalaSekolah || 'Abdul Yakub, S.Ag';
             parsed.users.unshift({ id: "admin", name: `Admin (${kepsekName})`, role: "kepsek", jabatan: "Kepala Sekolah / Admin" });
@@ -919,7 +907,7 @@
         namaKepalaSekolah: sch.kepsek,
         defaultPassword: sch.password || npsn,
         tanggalCetak: "Bekasi, 29 September 2026",
-        googleDriveLink: isAnnisa ? "1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x" : "",
+        googleDriveLink: DEFAULT_GDRIVE_FOLDER_ID,
         appsScriptUrl: PERMANENT_APPS_SCRIPT_URL,
         schoolPassword: sch.password || npsn,
         users: defaultUsers
@@ -933,7 +921,19 @@
       if (!settings.appsScriptUrl || settings.appsScriptUrl.includes('script.google.com')) {
         settings.appsScriptUrl = PERMANENT_APPS_SCRIPT_URL;
       }
+      if (!settings.googleDriveLink || !String(settings.googleDriveLink).trim()) {
+        settings.googleDriveLink = DEFAULT_GDRIVE_FOLDER_ID;
+      }
       localStorage.setItem('pkks_settings_' + npsn, JSON.stringify(settings));
+      try {
+        const baseUrl = normalizeFirebaseUrl(settings.appsScriptUrl);
+        const safeNpsn = toFirebaseKey(npsn);
+        originalFetch(`${baseUrl}/pkks_settings/${safeNpsn}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings)
+        }).catch(() => {});
+      } catch(e) {}
     }
 
     function getSchoolUserData(npsn, userId) {
@@ -1239,7 +1239,7 @@
             namaKepalaSekolah: kepsek,
             defaultPassword: targetNpsn,
             tanggalCetak: "Bekasi, 29 September 2026",
-            googleDriveLink: "",
+            googleDriveLink: DEFAULT_GDRIVE_FOLDER_ID,
             appsScriptUrl: PERMANENT_APPS_SCRIPT_URL,
             schoolPassword: password || targetNpsn,
             users: [{ id: "admin", name: `Admin (${kepsek})`, role: "kepsek", jabatan: "Kepala Sekolah / Admin" }]
@@ -1403,6 +1403,8 @@
           const customFilename = getBodyVal(body, 'custom_filename');
           const s = getSchoolSettings(npsn);
           const appsScriptUrl = s.appsScriptUrl || PERMANENT_APPS_SCRIPT_URL;
+          const rawGdrive = s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID;
+          const activeFolderId = extractFolderId(rawGdrive) || DEFAULT_GDRIVE_FOLDER_ID;
 
           const fileEntries = [];
           for (const [key, value] of body.entries()) {
@@ -1420,10 +1422,10 @@
             if (savedName) await PkksFileDB.set(savedName, file);
             if (file.name) await PkksFileDB.set(file.name, file);
 
-            // Upload to Firebase Realtime Database
+            // Upload to Firebase Realtime Database + Google Drive
             let firebaseSynced = false;
             if (appsScriptUrl) {
-              firebaseSynced = await uploadFileToFirebase(file, savedName, userName, userId, itemId, fileId, npsn, appsScriptUrl);
+              firebaseSynced = await uploadFileToFirebase(file, savedName, userName, userId, itemId, fileId, npsn, appsScriptUrl, activeFolderId);
             }
 
             uploadedFiles.push({
@@ -1435,10 +1437,12 @@
               savedName: savedName,
               url: '',
               size: `${(file.size / 1024).toFixed(1)} KB`,
-              folder: "PKKS 2026",
+              folder: "Google Drive & Firebase",
+              driveFolderId: activeFolderId,
+              driveUrl: `https://drive.google.com/drive/folders/${activeFolderId}`,
               user: userName,
               userId: userId,
-              isDrive: false,
+              isDrive: true,
               isFirebase: true,
               firebaseSynced: firebaseSynced
             });
@@ -1460,7 +1464,7 @@
         const userId = getBodyVal(body, 'user') || getBodyVal(body, 'userId') || '';
         const s = getSchoolSettings(npsn);
         const appsScriptUrl = s.appsScriptUrl || PERMANENT_APPS_SCRIPT_URL;
-        const folderId = s.googleDriveLink || '';
+        const folderId = s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID;
         if (fileName || fileId) {
           await deleteFileFromGDriveBackground(fileName, folderId, appsScriptUrl, {
             fileId,
@@ -1683,7 +1687,7 @@
           namaKepalaSekolah: "Abdul Yakub, S.Ag",
           defaultPassword: "Sditannisa",
           tanggalCetak: "Bekasi, 29 September 2026",
-          googleDriveLink: "",
+          googleDriveLink: "1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x",
           appsScriptUrl: "https://pkks-b9f13-default-rtdb.firebaseio.com/",
           users: DEFAULT_USERS
         };
@@ -1720,6 +1724,9 @@
             this.settings = data;
             if (!this.settings.appsScriptUrl || this.settings.appsScriptUrl.includes('script.google.com')) {
               this.settings.appsScriptUrl = "https://pkks-b9f13-default-rtdb.firebaseio.com/";
+            }
+            if (!this.settings.googleDriveLink || !String(this.settings.googleDriveLink).trim()) {
+              this.settings.googleDriveLink = DEFAULT_GDRIVE_FOLDER_ID;
             }
             if (Array.isArray(data.users) && data.users.length > 0) {
               this.userList = data.users;
@@ -2049,6 +2056,13 @@
       }
     }
 
+    window.openActiveGDriveFolder = function() {
+      const inputEl = document.getElementById('set-gdrive-link');
+      const rawVal = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : (state.settings.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID);
+      const folderId = extractFolderId(rawVal) || DEFAULT_GDRIVE_FOLDER_ID;
+      window.open(`https://drive.google.com/drive/folders/${folderId}`, '_blank');
+    };
+
     function handleSaveSettingsForm(e) {
       e.preventDefault();
       const namaSekolah = document.getElementById('set-nama-sekolah').value.trim();
@@ -2056,7 +2070,8 @@
       const namaKepalaSekolah = document.getElementById('set-nama-kepsek').value.trim();
       const defaultPassword = document.getElementById('set-default-password').value.trim();
       const tanggalCetak = document.getElementById('set-tanggal-cetak') ? document.getElementById('set-tanggal-cetak').value.trim() : 'Bekasi, 29 September 2026';
-      const googleDriveLink = document.getElementById('set-gdrive-link') ? document.getElementById('set-gdrive-link').value.trim() : '';
+      const rawGdriveLink = document.getElementById('set-gdrive-link') ? document.getElementById('set-gdrive-link').value.trim() : '';
+      const googleDriveLink = rawGdriveLink || DEFAULT_GDRIVE_FOLDER_ID;
       const appsScriptUrl = (document.getElementById('set-appsscript-url') && document.getElementById('set-appsscript-url').value.trim())
         ? document.getElementById('set-appsscript-url').value.trim()
         : (state.settings.appsScriptUrl || 'https://pkks-b9f13-default-rtdb.firebaseio.com/');
@@ -2557,7 +2572,7 @@
       state.saveScores();
     }
 
-    // MULTI-FILE UPLOADER (AUTOMATIC FIREBASE REALTIME DATABASE STORAGE)
+    // MULTI-FILE UPLOADER (DIRECT GOOGLE DRIVE STORAGE VIA FIREBASE BRIDGE)
     async function handleFileUpload(itemId, files, inputEl) {
       if (!files || files.length === 0) return;
       const filesArray = Array.from(files);
@@ -2575,8 +2590,10 @@
       const npsn = state.schoolNpsn || localStorage.getItem('pkks_school_npsn') || '20231556';
       const s = getSchoolSettings(npsn);
       const firebaseBaseUrl = (state.settings && state.settings.appsScriptUrl) || s.appsScriptUrl || PERMANENT_APPS_SCRIPT_URL;
+      const activeFolderId = extractFolderId((state.settings && state.settings.googleDriveLink) || s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID) || DEFAULT_GDRIVE_FOLDER_ID;
+      const driveFolderUrl = `https://drive.google.com/drive/folders/${activeFolderId}`;
 
-      state.showToast(`⏳ Mengunggah ${filesArray.length} berkas ke Firebase...`);
+      state.showToast(`⏳ Mengunggah ${filesArray.length} berkas ke Google Drive...`);
 
       for (const file of filesArray) {
         try {
@@ -2604,7 +2621,7 @@
             let savedName = fileInfo.savedName || formattedName || file.name;
             let fileId = fileInfo.id || clientFileId;
 
-            // Guarantee file is in IndexedDB
+            // Guarantee file is in local IndexedDB for instant preview
             await PkksFileDB.set(fileId, file);
             if (savedName) await PkksFileDB.set(savedName, file);
             if (file.name) await PkksFileDB.set(file.name, file);
@@ -2617,9 +2634,11 @@
               savedName: savedName,
               originalName: file.name,
               url: uploadedUrl.startsWith('data:') ? '' : uploadedUrl,
-              isDrive: false,
-              isFirebase: true,
-              folder: 'PKKS 2026',
+              driveFolderId: activeFolderId,
+              driveUrl: driveFolderUrl,
+              isDrive: true,
+              isFirebaseBridge: true,
+              folder: 'Google Drive',
               user: ownerUserName,
               userId: ownerUserId,
               size: (file.size / 1024).toFixed(1) + ' KB',
@@ -2628,9 +2647,9 @@
 
             saveLocalFileMeta(npsn, fileEntry);
 
-            // If /api/upload was handled by Python server without browser Firebase sync, ensure Firebase upload
+            // If /api/upload was handled by Python server without browser GDrive + Firebase bridge sync, ensure sync
             if (!fileInfo.firebaseSynced) {
-              await uploadFileToFirebase(file, savedName, ownerUserName, ownerUserId, itemId, fileId, npsn, firebaseBaseUrl);
+              await uploadFileToFirebase(file, savedName, ownerUserName, ownerUserId, itemId, fileId, npsn, firebaseBaseUrl, activeFolderId);
             }
 
             if (!state.scores[itemId]) state.scores[itemId] = {};
@@ -2663,7 +2682,7 @@
       if (inputEl) inputEl.value = '';
 
       await state.saveScores();
-      state.showToast(`☁️ Berkas berhasil diunggah ke Firebase!`);
+      state.showToast(`☁️ Berkas berhasil disimpan ke Google Drive!`);
       renderApp();
     }
 
@@ -2686,7 +2705,7 @@
         const npsn = state.schoolNpsn || localStorage.getItem('pkks_school_npsn') || '20231556';
         const s = getSchoolSettings(npsn);
         const appsScriptUrl = s.appsScriptUrl || PERMANENT_APPS_SCRIPT_URL;
-        const folderId = s.googleDriveLink || '';
+        const folderId = s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID;
 
         await deleteFileFromGDriveBackground(fileNameToDelete || fileId, folderId, appsScriptUrl, {
           fileId,
@@ -2718,7 +2737,7 @@
         }
 
         await state.saveScores();
-        state.showToast('🗑️ Berkas berhasil dihapus dari Sistem dan Firebase.');
+        state.showToast('🗑️ Berkas berhasil dihapus dari Google Drive & Sistem.');
         renderApp();
       }
     }
@@ -2747,12 +2766,6 @@
       if (!blob && file.savedName) blob = await PkksFileDB.get(file.savedName);
       if (!blob && file.name) blob = await PkksFileDB.get(file.name);
 
-      // Priority 2: Fetch from Firebase Realtime Database if not cached in IndexedDB
-      if (!blob) {
-        state.showToast('⏳ Memuat berkas dari Firebase...');
-        blob = await fetchFileBlobFromFirebase(npsn, fileKey || file.id || file.savedName || file.name);
-      }
-
       if (blob) {
         const blobUrl = URL.createObjectURL(blob);
         const previewObj = Object.assign({}, file, { url: blobUrl, isBlobUrl: true });
@@ -2760,13 +2773,13 @@
         return;
       }
 
-      // Priority 3: Direct file URL if already present
+      // Priority 2: Direct file URL if already present
       if (file.url) {
         openPreview(file);
         return;
       }
 
-      // Priority 4: Fallback query via API
+      // Priority 3: Fallback query via local API or Google Drive
       const rawName = file.savedName || file.name || '';
       const fallbackUrl = '/api/pdf-bytes?npsn=' + npsn + '&file=' + encodeURIComponent(rawName);
       const previewObj = Object.assign({}, file, { url: fallbackUrl });
@@ -2778,7 +2791,7 @@
       state.previewFile = file;
       renderApp();
       
-      if (file.isDrive && file.url) {
+      if (file.isDrive && file.url && !file.isBlobUrl && file.url.includes('drive.google.com')) {
         return;
       }
       
@@ -3699,11 +3712,13 @@
               <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">☁️ Integrasi Google Drive (Otomatis Upload)</h3>
               
               <div class="form-group" style="margin-bottom: 12px;">
-                <label class="form-label" style="font-weight: 800; font-size: 11px; color: #334155; text-transform: uppercase;">ID FOLDER GOOGLE DRIVE (Tujuan Upload):</label>
-                <input type="text" id="set-gdrive-link" class="form-input" value="${s.googleDriveLink || ''}" placeholder="(pastekan id 1_XXXXXXXXXXX di sini)" />
+                <label class="form-label" style="font-weight: 800; font-size: 11px; color: #334155; text-transform: uppercase;">ID / LINK FOLDER GOOGLE DRIVE (Tujuan Upload):</label>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="set-gdrive-link" class="form-input" value="${s.googleDriveLink || '1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x'}" placeholder="Masukkan ID (1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x) atau link folder Google Drive" />
+                  <button type="button" onclick="openActiveGDriveFolder()" class="btn-primary" style="background:#059669; width:auto; padding:0 14px; white-space:nowrap; font-size:11.5px;" title="Buka Folder Google Drive">📂 Buka GDrive</button>
+                </div>
                 <p style="font-size: 11.5px; color: #64748b; margin-top: 6px; line-height: 1.4;">
-                  * Contoh link: https://drive.google.com/drive/folders/<b>1_XXXXXXXXXXXXXX</b>?usp=sharing<br>
-                  <i>(Ambil kode ID yang dicetak tebal saja)</i>
+                  * Aktif: <b>${extractFolderId(s.googleDriveLink || '1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x')}</b> — Anda dapat memasukkan ID folder langsung (contoh: <b>1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x</b>) maupun link lengkap Google Drive (<i>https://drive.google.com/drive/folders/<b>1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x</b>?usp=sharing</i>).
                 </p>
               </div>
 
@@ -4145,7 +4160,7 @@
       const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
       const isPdf = ext === 'pdf';
 
-      let isDriveFile = file.isDrive && file.url;
+      let isDriveFile = Boolean(file.isDrive && file.url && !file.isBlobUrl && file.url.includes('drive.google.com'));
       let drivePreviewUrl = '';
       if (isDriveFile) {
         if (file.url.includes('/view')) {
@@ -4154,6 +4169,8 @@
           drivePreviewUrl = file.url;
         }
       }
+      const activeFolderId = extractFolderId(file.driveFolderId || (state.settings && state.settings.googleDriveLink) || DEFAULT_GDRIVE_FOLDER_ID) || DEFAULT_GDRIVE_FOLDER_ID;
+      const gdriveFolderHref = file.driveUrl || `https://drive.google.com/drive/folders/${activeFolderId}`;
 
       return `
         <div class="modal-overlay" onclick="closePreview()">
@@ -4161,9 +4178,10 @@
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <h3 style="font-size: 14px; font-weight: 800; color: white;">${fileName}</h3>
-                <p style="font-size: 11px; color: #94a3b8;">Pengunggah: <strong>${file.user || 'Umum'}</strong> &bull; Format: <span style="color:#38bdf8; font-weight:700; text-transform:uppercase;">${ext}</span> &bull; Lokasi: <strong style="color:#f59e0b;">${isDriveFile ? 'Google Drive' : 'Lokal (PKKS 2026)'}</strong></p>
+                <p style="font-size: 11px; color: #94a3b8;">Pengunggah: <strong>${file.user || 'Umum'}</strong> &bull; Format: <span style="color:#38bdf8; font-weight:700; text-transform:uppercase;">${ext}</span> &bull; Lokasi: <strong style="color:#f59e0b;">Google Drive (${activeFolderId.substring(0, 8)}...)</strong></p>
               </div>
               <div style="display: flex; gap: 8px; align-items: center;">
+                <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #0284c7; width: auto; text-decoration: none;">📂 Buka GDrive</a>
                 ${isDriveFile ? `
                   <a href="${file.url}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none;">🖨️ Buka & Print di Drive</a>
                 ` : isPdf ? `
