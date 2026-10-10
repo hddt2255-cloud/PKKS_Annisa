@@ -35,6 +35,59 @@ def extract_gdrive_folder_id(url_or_id):
         return url_or_id
     return None
 
+def detect_item_code_from_filename(filename):
+    if not filename:
+        return '1.1'
+    m = re.search(r'(?:^|[_\-\s\[(])([1-8]\.[1-9]|6\.1[0-5]|3\.[1-8]|4\.[1-5]|5\.[1-4]|7\.[1-3]|8\.[1-3])(?:[_\-\s\])]|$)', str(filename))
+    if m:
+        return m.group(1)
+    return '1.1'
+
+def is_user_file_match(file_dict, target_user_id, target_user_name, users_list=None):
+    if not file_dict or not target_user_id:
+        return False
+    if target_user_id in ['all', 'semua', 'admin']:
+        return True
+    
+    def norm(s):
+        return re.sub(r'[^a-z0-9]', '', str(s or '').lower())
+    
+    n_target_id = norm(target_user_id)
+    n_target_name = norm(target_user_name)
+    
+    f_user_id = norm(file_dict.get('userId', ''))
+    f_user = norm(file_dict.get('user', '') or file_dict.get('username', ''))
+    f_name = norm(file_dict.get('savedName', '') or file_dict.get('name', ''))
+
+    is_kepsek = (target_user_id in ['admin', 'abdul_yakub'])
+    if not is_kepsek and users_list:
+        u_obj = next((u for u in users_list if u.get('id') == target_user_id), None)
+        if u_obj and u_obj.get('role') == 'kepsek':
+            is_kepsek = True
+    if is_kepsek:
+        if f_user_id in ['admin', 'abdulyakub'] or 'admin' in f_user or 'yakub' in f_user or 'admin' in f_name or 'yakub' in f_name:
+            return True
+
+    if f_user_id and f_user_id == n_target_id:
+        return True
+    if f_user and (f_user == n_target_name or f_user == n_target_id):
+        return True
+    if f_user and n_target_name and (n_target_name in f_user or f_user in n_target_name):
+        return True
+    if n_target_id and f_user and n_target_id in f_user:
+        return True
+    if f_name and n_target_id and (f_name.startswith(n_target_id) or f"[{n_target_id}]" in f_name or f"_{n_target_id}_" in f_name):
+        return True
+    if f_name and n_target_name and (f_name.startswith(n_target_name) or n_target_name in f_name):
+        return True
+    
+    first_name = norm(re.split(r'[\s,]+', str(target_user_name or ''))[0])
+    if first_name and len(first_name) >= 3:
+        if f_user_id == first_name or first_name in f_user or first_name in f_name:
+            return True
+
+    return False
+
 def bg_upload(file_content, filename, mime_type, apps_script_url, user_name, folder_id="", user_id="admin", item_id="1.1", file_id="", npsn="20231556"):
     try:
         base_url = normalize_firebase_url(apps_script_url)
@@ -665,12 +718,10 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                             uf.get('savedName') in all_disk_files or
                             uf.get('name') in all_disk_files or
                             uf.get('isDrive') or
-                            uf.get('isFirebase')
+                            uf.get('isFirebase') or
+                            uf.get('isFirebaseBridge')
                         )
-                        belongs_to_user = (
-                            (uf.get('userId') and uf.get('userId') == user_id) or
-                            (not uf.get('userId') and uf.get('user') in [user_name, user_id])
-                        )
+                        belongs_to_user = is_user_file_match(uf, user_id, user_name, users)
                         if exists_or_cloud and belongs_to_user:
                             raw_fn = uf.get('savedName') or uf.get('name')
                             if raw_fn and not uf.get('isDrive'):
@@ -690,19 +741,13 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                 for f_name in all_disk_files:
                     if f_name.startswith('logo_sekolah_'):
                         continue
-                    # Match files belonging to this user by name, prefix, or id
-                    is_match = (
-                        f_name.startswith(f"{user_name}_") or
-                        f_name.startswith(f"{sanitized_user_prefix}_") or
-                        f_name.startswith(f"{user_id}_") or
-                        f"[{sanitized_user_prefix}" in f_name or
-                        f"[{user_id}" in f_name or
-                        f"[{user_name}" in f_name
-                    )
+                    # Match files belonging to this user using smart matching
+                    is_match = is_user_file_match({"name": f_name, "savedName": f_name}, user_id, user_name, users)
                     if is_match and f_name not in known_files:
                         f_path = os.path.join(self.get_dirs()[1], f_name)
                         f_size_kb = f"{round(os.path.getsize(f_path) / 1024, 1)} KB"
                         f_url = f"/api/pdf-bytes?npsn={self.get_school_npsn()}&file={urllib.parse.quote(f_name)}"
+                        target_item_id = detect_item_code_from_filename(f_name)
                         new_file_obj = {
                             "id": f"sync_{int(os.path.getmtime(f_path))}_{f_name[:8]}",
                             "name": f_name,
@@ -711,13 +756,14 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                             "folder": PKKS_FOLDER_NAME,
                             "user": user_name,
                             "userId": user_id,
-                            "size": f_size_kb
+                            "size": f_size_kb,
+                            "isDrive": True
                         }
-                        if '1.1' not in data['scores']:
-                            data['scores']['1.1'] = {"skor": 0, "uploadedFiles": []}
-                        if 'uploadedFiles' not in data['scores']['1.1']:
-                            data['scores']['1.1']['uploadedFiles'] = []
-                        data['scores']['1.1']['uploadedFiles'].append(new_file_obj)
+                        if target_item_id not in data['scores']:
+                            data['scores'][target_item_id] = {"skor": 0, "uploadedFiles": []}
+                        if 'uploadedFiles' not in data['scores'][target_item_id]:
+                            data['scores'][target_item_id]['uploadedFiles'] = []
+                        data['scores'][target_item_id]['uploadedFiles'].append(new_file_obj)
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')

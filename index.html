@@ -381,6 +381,67 @@
       return user.id === 'admin' || user.id === 'all' || user.id === 'semua' || user.role === 'admin';
     }
 
+    function detectItemCodeFromFileName(fileName) {
+      if (!fileName) return '1.1';
+      const str = String(fileName);
+      const m = str.match(/(?:^|[_\-\s\[(])([1-8]\.[1-9]|6\.1[0-5]|3\.[1-8]|4\.[1-5]|5\.[1-4]|7\.[1-3]|8\.[1-3])(?:[_\-\s\])]|$)/);
+      if (m && m[1]) return m[1];
+      return '1.1';
+    }
+
+    function isUserFileMatch(file, targetUserId, targetUserName, userList) {
+      if (!file) return false;
+      if (!targetUserId) return false;
+      
+      // Admin / All view can see all uploaded files
+      if (targetUserId === 'all' || targetUserId === 'semua' || targetUserId === 'admin') {
+        return true;
+      }
+      
+      const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const nTargetId = norm(targetUserId);
+      const nTargetName = norm(targetUserName);
+      
+      const fUserId = norm(file.userId);
+      const fUser = norm(file.user || file.uploadedByName || file.username);
+      const fName = norm(file.savedName || file.name || file.originalName);
+
+      // Kepala Sekolah / Admin accounts alias matching (admin <-> abdul_yakub)
+      const targetUserObj = (userList || []).find(u => u.id === targetUserId);
+      const isKepsek = (targetUserId === 'admin' || targetUserId === 'abdul_yakub' || (targetUserObj && targetUserObj.role === 'kepsek'));
+      if (isKepsek) {
+        if (fUserId === 'admin' || fUserId === 'abdulyakub' || fUser.includes('admin') || fUser.includes('abdulyakub') || fUser.includes('yakub') || fName.includes('admin') || fName.includes('abdulyakub')) {
+          return true;
+        }
+      }
+
+      // 1. Direct ID match
+      if (fUserId && fUserId === nTargetId) return true;
+
+      // 2. Direct Name match
+      if (fUser && (fUser === nTargetName || fUser === nTargetId)) return true;
+
+      // 3. User name contains or is contained in
+      if (fUser && nTargetName && (nTargetName.includes(fUser) || fUser.includes(nTargetName))) return true;
+
+      // 4. User ID found in user string
+      if (nTargetId && fUser && fUser.includes(nTargetId)) return true;
+
+      // 5. Filename prefix/tag matching (e.g. "[susanti]_..." or "susanti_...")
+      if (fName && nTargetId && (fName.startsWith(nTargetId) || fName.includes(`[${nTargetId}]`) || fName.includes(`_${nTargetId}_`))) return true;
+      if (fName && nTargetName && (fName.startsWith(nTargetName) || fName.includes(nTargetName))) return true;
+      
+      // 6. First name matching (e.g. "susanti" from "Susanti, S.Kom, S.Pd")
+      const firstName = norm((targetUserName || '').split(/[\s,]+/)[0]);
+      if (firstName && firstName.length >= 3) {
+        if (fUserId === firstName) return true;
+        if (fUser && (fUser.startsWith(firstName) || fUser.includes(firstName))) return true;
+        if (fName && (fName.startsWith(firstName) || fName.includes(firstName))) return true;
+      }
+
+      return false;
+    }
+
     function getDeletedFilesSet(npsn) {
       npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
       try {
@@ -754,31 +815,157 @@
         const baseUrl = normalizeFirebaseUrl(s.appsScriptUrl);
         const safeNpsn = toFirebaseKey(npsn);
         const delSet = getDeletedFilesSet(npsn);
-        const isAdminView = (userId === 'all' || userId === 'semua' || userId === 'admin');
+        const activeFolderId = extractFolderId(s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID);
+        const driveFolderUrl = `https://drive.google.com/drive/folders/${activeFolderId}`;
 
-        const metaPromise = originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
-        const dataUrl = isAdminView
-          ? `${baseUrl}/pkks_data/${safeNpsn}.json`
-          : `${baseUrl}/pkks_data/${safeNpsn}/${toFirebaseKey(userId)}.json`;
-        const dataPromise = originalFetch(dataUrl).then(r => r.ok ? r.json() : null).catch(() => null);
+        // Multi-source cloud fetching:
+        // 1. New metadata bridge records (/pkks_file_meta)
+        // 2. Legacy / previous uploaded records (/pkks_files) - so NO previous uploads are ever lost!
+        // 3. Complete school user scores & data (/pkks_data)
+        // 4. Remote school settings (/pkks_settings)
+        const metaPromise = originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}.json`)
+          .then(r => r.ok ? r.json() : null).catch(() => null);
+        const legacyFilesPromise = originalFetch(`${baseUrl}/pkks_files/${safeNpsn}.json`)
+          .then(r => r.ok ? r.json() : null).catch(() => null);
+        const dataPromise = originalFetch(`${baseUrl}/pkks_data/${safeNpsn}.json`)
+          .then(r => r.ok ? r.json() : null).catch(() => null);
+        const settingsPromise = originalFetch(`${baseUrl}/pkks_settings/${safeNpsn}.json`)
+          .then(r => r.ok ? r.json() : null).catch(() => null);
 
-        const [remoteMetaMap, remoteDataRes] = await Promise.all([metaPromise, dataPromise]);
+        // Also query Google Drive file list if supported
+        let gdriveFilesPromise = Promise.resolve(null);
+        if (DEFAULT_GDRIVE_EXEC_URL && activeFolderId) {
+          gdriveFilesPromise = originalFetch(`${DEFAULT_GDRIVE_EXEC_URL}?action=list&folderId=${activeFolderId}`)
+            .then(r => r.ok ? r.json() : null)
+            .catch(() => null);
+        }
 
-        if (remoteMetaMap && typeof remoteMetaMap === 'object' && !remoteMetaMap.error) {
-          const localMap = getLocalFileMetaMap(npsn);
-          let metaUpdated = false;
-          Object.keys(remoteMetaMap).forEach(k => {
-            const m = remoteMetaMap[k];
-            if (m && m.id && !delSet.has(m.id) && !delSet.has(m.savedName) && !delSet.has(m.name)) {
-              localMap[m.id] = m;
-              metaUpdated = true;
+        const [remoteMetaMap, legacyFilesMap, remoteDataRes, remoteSettings, gdriveListRes] = await Promise.allSettled([
+          metaPromise,
+          legacyFilesPromise,
+          dataPromise,
+          settingsPromise,
+          gdriveFilesPromise
+        ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
+
+        // Sync settings if available from cloud
+        if (remoteSettings && typeof remoteSettings === 'object' && !remoteSettings.error) {
+          const mergedSettings = Object.assign({}, s, remoteSettings);
+          if (!mergedSettings.googleDriveLink) mergedSettings.googleDriveLink = DEFAULT_GDRIVE_FOLDER_ID;
+          if (!mergedSettings.appsScriptUrl) mergedSettings.appsScriptUrl = PERMANENT_APPS_SCRIPT_URL;
+          localStorage.setItem('pkks_settings_' + npsn, JSON.stringify(mergedSettings));
+          if (window.state) {
+            window.state.settings = mergedSettings;
+            if (Array.isArray(mergedSettings.users) && mergedSettings.users.length > 0) {
+              window.state.userList = mergedSettings.users;
             }
-          });
-          if (metaUpdated) {
-            localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(localMap));
           }
         }
 
+        const localMap = getLocalFileMetaMap(npsn);
+        let metaUpdated = false;
+
+        const registerCloudFile = (fileObj) => {
+          if (!fileObj || typeof fileObj !== 'object') return;
+          const fId = fileObj.id || fileObj.fileKey || ('f_' + Math.random().toString(36).substr(2, 8));
+          const sName = fileObj.savedName || fileObj.name || fId;
+          const oName = fileObj.originalName || fileObj.name || sName;
+
+          if (delSet.has(fId) || delSet.has(sName) || delSet.has(oName)) return;
+          if (sName.startsWith('logo_sekolah_') || oName.startsWith('logo_sekolah_')) return;
+
+          const fItemId = fileObj.itemId || detectItemCodeFromFileName(sName) || '1.1';
+          const fFolderId = extractFolderId(fileObj.driveFolderId || activeFolderId);
+          const fDriveUrl = fileObj.driveUrl || `https://drive.google.com/drive/folders/${fFolderId}`;
+
+          const cleanFile = {
+            id: fId,
+            fileKey: fId,
+            itemId: fItemId,
+            name: sName,
+            savedName: sName,
+            originalName: oName,
+            mimeType: fileObj.mimeType || 'application/octet-stream',
+            size: fileObj.size || '100 KB',
+            user: fileObj.user || fileObj.username || 'Pengunggah',
+            userId: fileObj.userId || 'admin',
+            npsn: npsn,
+            folder: 'Google Drive',
+            driveFolderId: fFolderId,
+            driveUrl: fDriveUrl,
+            url: fileObj.url && !fileObj.url.startsWith('data:') ? fileObj.url : '',
+            isDrive: true,
+            isFirebaseBridge: true,
+            timestamp: fileObj.timestamp || Date.now()
+          };
+
+          if (!localMap[fId]) {
+            localMap[fId] = cleanFile;
+            metaUpdated = true;
+          } else {
+            Object.assign(localMap[fId], cleanFile);
+          }
+        };
+
+        // 1. Process Google Drive listed files
+        let driveItems = [];
+        if (Array.isArray(gdriveListRes)) {
+          driveItems = gdriveListRes;
+        } else if (gdriveListRes && Array.isArray(gdriveListRes.files)) {
+          driveItems = gdriveListRes.files;
+        }
+        const currentUsers = (window.state && window.state.userList) || DEFAULT_USERS;
+        driveItems.forEach(df => {
+          if (!df) return;
+          const dName = df.name || df.filename || df.title || '';
+          if (!dName || dName.startsWith('logo_sekolah_')) return;
+          
+          let deducedUser = 'Pengunggah';
+          let deducedUserId = 'admin';
+          for (const u of currentUsers) {
+            if (isUserFileMatch({ savedName: dName, name: dName }, u.id, u.name, currentUsers)) {
+              deducedUser = u.name;
+              deducedUserId = u.id;
+              break;
+            }
+          }
+
+          registerCloudFile({
+            id: df.id || ('gd_' + dName),
+            name: dName,
+            savedName: dName,
+            originalName: dName,
+            size: df.size ? (typeof df.size === 'number' ? `${(df.size/1024).toFixed(1)} KB` : String(df.size)) : '100 KB',
+            mimeType: df.mimeType || 'application/octet-stream',
+            user: deducedUser,
+            userId: deducedUserId,
+            url: df.webViewLink || df.url || '',
+            driveFolderId: activeFolderId,
+            driveUrl: driveFolderUrl
+          });
+        });
+
+        // 2. Process Firebase pkks_file_meta
+        if (remoteMetaMap && typeof remoteMetaMap === 'object' && !remoteMetaMap.error) {
+          Object.keys(remoteMetaMap).forEach(k => {
+            const m = remoteMetaMap[k];
+            if (m) registerCloudFile(m);
+          });
+        }
+
+        // 3. Process Firebase legacy pkks_files (recover files from previous versions)
+        if (legacyFilesMap && typeof legacyFilesMap === 'object' && !legacyFilesMap.error) {
+          Object.keys(legacyFilesMap).forEach(k => {
+            const m = legacyFilesMap[k];
+            if (m) {
+              const fileCopy = Object.assign({}, m);
+              if (fileCopy.dataUrl) delete fileCopy.dataUrl;
+              registerCloudFile(fileCopy);
+            }
+          });
+        }
+
+        // 4. Process all users' records from Firebase pkks_data
         const mergeUserRecord = (targetUid, recordObj) => {
           if (!recordObj || !recordObj.payloadJson || targetUid === 'all' || targetUid === 'semua') return;
           try {
@@ -792,8 +979,7 @@
             } catch(e) {}
 
             if (!localUserData) {
-              localStorage.setItem(localKey, JSON.stringify(remoteUserData));
-              return;
+              localUserData = remoteUserData;
             }
 
             if (!localUserData.scores) localUserData.scores = {};
@@ -811,10 +997,10 @@
 
               (rItem.uploadedFiles || []).forEach(rf => {
                 if (!rf || delSet.has(rf.id) || delSet.has(rf.savedName) || delSet.has(rf.name)) return;
+                registerCloudFile(Object.assign({ itemId: itemId, userId: targetUid }, rf));
                 if (!lItem.uploadedFiles.some(lf => lf.id === rf.id || (lf.savedName && lf.savedName === rf.savedName))) {
                   lItem.uploadedFiles.push(rf);
                 }
-                if (rf.id) saveLocalFileMeta(npsn, Object.assign({ itemId: itemId, userId: targetUid }, rf));
               });
             });
 
@@ -826,15 +1012,32 @@
         };
 
         if (remoteDataRes && typeof remoteDataRes === 'object' && !remoteDataRes.error) {
-          if (isAdminView) {
-            Object.keys(remoteDataRes).forEach(k => {
-              const rec = remoteDataRes[k];
-              if (rec && rec.user) mergeUserRecord(rec.user, rec);
-            });
-          } else {
-            mergeUserRecord(userId, remoteDataRes);
-          }
+          Object.keys(remoteDataRes).forEach(k => {
+            const rec = remoteDataRes[k];
+            if (rec && rec.user) {
+              mergeUserRecord(rec.user, rec);
+            } else if (rec && rec.payloadJson) {
+              mergeUserRecord(k, rec);
+            }
+          });
         }
+
+        if (metaUpdated || Object.keys(localMap).length > 0) {
+          localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(localMap));
+        }
+
+        // 5. Ensure any discovered cloud files without records in pkks_file_meta get mirrored to Firebase bridge
+        Object.values(localMap).forEach(meta => {
+          if (!meta || !meta.id || delSet.has(meta.id)) return;
+          if (remoteMetaMap && remoteMetaMap[toFirebaseKey(meta.id)]) return;
+          const safeFileId = toFirebaseKey(meta.id);
+          originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${safeFileId}.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(meta)
+          }).catch(() => {});
+        });
+
       } catch (e) {
         console.warn("[Firebase] syncSchoolDataFromFirebase notice:", e);
       }
@@ -1076,9 +1279,7 @@
           parsed.scores[k].uploadedFiles = parsed.scores[k].uploadedFiles.filter(f => {
             if (!f || delSet.has(f.id) || (f.savedName && delSet.has(f.savedName)) || (f.name && delSet.has(f.name))) return false;
             if ((f.savedName || '').startsWith('logo_sekolah_') || (f.name || '').startsWith('logo_sekolah_')) return false;
-            if (f.userId && f.userId !== userId) return false;
-            if (!f.userId && f.user && f.user !== 'Umum' && f.user !== uName && f.user !== userId) return false;
-            return true;
+            return isUserFileMatch(f, userId, uName, settings.users || []);
           });
           parsed.scores[k].uploadedFiles.forEach(f => {
             if (f.url && f.url.startsWith('data:')) {
@@ -1096,9 +1297,9 @@
       Object.values(fileMetaMap).forEach(meta => {
         if (!meta || delSet.has(meta.id) || (meta.savedName && delSet.has(meta.savedName)) || (meta.name && delSet.has(meta.name))) return;
         if ((meta.savedName || '').startsWith('logo_sekolah_') || (meta.name || '').startsWith('logo_sekolah_')) return;
-        const isUserMatch = (meta.userId === userId) || (!meta.userId && (meta.user === uName || meta.user === userId));
-        if (!isUserMatch) return;
-        const itemId = meta.itemId || '1.1';
+        const isMatch = isUserFileMatch(meta, userId, uName, settings.users || []);
+        if (!isMatch) return;
+        const itemId = meta.itemId || detectItemCodeFromFileName(meta.savedName || meta.name) || '1.1';
         if (!parsed.scores[itemId]) {
           parsed.scores[itemId] = { skor: 0, catatan: "", uploadedFiles: [] };
         }
@@ -1672,8 +1873,14 @@
     class AppState {
       constructor() {
         this.currentUser = null;
-        this.schoolNpsn = localStorage.getItem('pkks_school_npsn') || null;
-        this.schoolName = localStorage.getItem('pkks_school_name') || null;
+        this.schoolNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+        this.schoolName = localStorage.getItem('pkks_school_name') || 'SDIT ANNISA BOGOR';
+        if (!localStorage.getItem('pkks_school_npsn')) {
+          try {
+            localStorage.setItem('pkks_school_npsn', '20231556');
+            localStorage.setItem('pkks_school_name', 'SDIT ANNISA BOGOR');
+          } catch(e) {}
+        }
         try {
           const savedUser = sessionStorage.getItem('pkks_current_user') || localStorage.getItem('pkks_current_user');
           if (savedUser) {
@@ -1717,6 +1924,7 @@
       }
 
       async init() {
+        const npsn = this.schoolNpsn || '20231556';
         try {
           const res = await fetch('/api/settings');
           if (res.ok) {
@@ -1735,6 +1943,20 @@
         } catch (e) {
           console.log("Using DEFAULT_USERS & default settings.");
         }
+
+        // Also fetch cloud settings directly to guarantee newest users & drive links on all devices
+        try {
+          const baseUrl = normalizeFirebaseUrl(this.settings.appsScriptUrl);
+          const safeNpsn = toFirebaseKey(npsn);
+          const remoteSettings = await originalFetch(`${baseUrl}/pkks_settings/${safeNpsn}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+          if (remoteSettings && typeof remoteSettings === 'object' && !remoteSettings.error) {
+            this.settings = Object.assign({}, this.settings, remoteSettings);
+            if (Array.isArray(remoteSettings.users) && remoteSettings.users.length > 0) {
+              this.userList = remoteSettings.users;
+            }
+          }
+        } catch (e) {}
+
         if (this.currentUser) {
           if (this.currentUser.id === 'admin' || this.currentUser.id === 'all' || this.currentUser.id === 'semua') {
             this.selectedTeacherId = 'all';
@@ -1804,6 +2026,13 @@
               ...Object.keys(data.scores || {})
             ]);
 
+            const allMetaFiles = Object.values(getLocalFileMetaMap(npsn));
+            allMetaFiles.forEach(meta => {
+              if (!meta) return;
+              const itemId = meta.itemId || detectItemCodeFromFileName(meta.savedName || meta.name) || '1.1';
+              allItemKeys.add(itemId);
+            });
+
             allItemKeys.forEach(itemId => {
               const sItem = (data.scores && data.scores[itemId]) || {};
               const lItem = (localData.scores && localData.scores[itemId]) || {};
@@ -1816,10 +2045,7 @@
                 if (!fId || seenIds.has(fId)) return;
                 if (deletedSet.has(fId) || (f.savedName && deletedSet.has(f.savedName)) || (f.name && deletedSet.has(f.name))) return;
                 if (!isAllView) {
-                  const belongsToUser = (f.userId && f.userId === targetUserId) ||
-                    (!f.userId && targetUserName && f.user === targetUserName) ||
-                    (!f.userId && f.user === targetUserId);
-                  if (!belongsToUser) return;
+                  if (!isUserFileMatch(f, targetUserId, targetUserName, this.userList)) return;
                 }
                 seenIds.add(fId);
                 combinedFiles.push(f);
@@ -1827,6 +2053,14 @@
 
               if (Array.isArray(sItem.uploadedFiles)) sItem.uploadedFiles.forEach(addFileIfAllowed);
               if (Array.isArray(lItem.uploadedFiles)) lItem.uploadedFiles.forEach(addFileIfAllowed);
+
+              // Also check local registry files belonging to this indicator
+              allMetaFiles.forEach(meta => {
+                const mItemId = meta.itemId || detectItemCodeFromFileName(meta.savedName || meta.name) || '1.1';
+                if (mItemId === itemId) {
+                  addFileIfAllowed(meta);
+                }
+              });
 
               mergedScores[itemId] = {
                 skor: sItem.skor || lItem.skor || 0,
@@ -1850,6 +2084,7 @@
         } catch (e) {
           console.error("Failed to load user data:", e);
         }
+        renderApp();
       }
 
       showToast(msg) {
@@ -3038,6 +3273,12 @@
       }
     }
 
+    window.triggerManualCloudSync = async function() {
+      state.showToast('⏳ Menyinkronkan seluruh berkas dari Google Drive & Firebase...');
+      await state.loadUserData();
+      state.showToast('✅ Berkas cloud berhasil disinkronkan & diperbarui!');
+    };
+
     // MAIN RENDER FUNCTION
     function renderApp() {
       const app = document.getElementById('app');
@@ -4037,6 +4278,16 @@
                     `}
                   </select>
                 </div>
+
+                <button 
+                  type="button" 
+                  onclick="triggerManualCloudSync()" 
+                  title="Sinkronkan Berkas Google Drive & Cloud" 
+                  class="btn-primary" 
+                  style="width: auto; height: 36px; padding: 0 12px; font-size: 11px; background: #0284c7; display: flex; align-items: center; gap: 6px; border-radius: 10px; text-decoration: none; border: none; font-weight: 700; color: white;"
+                >
+                  🔄 <span class="no-print">Sinkron Cloud</span>
+                </button>
 
                 <button type="button" onclick="handleSuperAdminButtonClick()" title="Super Admin" style="width: 36px; height: 36px; border-radius: 10px; background: #f8fafc; border: 1.5px solid #cbd5e1; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 17px; transition: all 0.15s ease;" onmouseover="this.style.background='#ecfdf5'; this.style.borderColor='#10b981'; this.style.color='#047857'; this.style.transform='scale(1.06)';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.color='#475569'; this.style.transform='scale(1)';">
                   ⚙️
