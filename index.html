@@ -1376,7 +1376,7 @@
                     }
                   }
                   (itemVal.uploadedFiles || []).forEach(uf => {
-                    if (!uf || delSet.has(uf.id) || (uf.savedName && delSet.has(uf.savedName)) || (uf.name && delSet.has(uf.name))) return;
+                    const isRealCloud = Object.values(fileMetaMap).some(cf => cf.id === uf.id || cf.fileKey === uf.fileKey || (cf.savedName && (cf.savedName === uf.savedName || cf.savedName === uf.name))); if (!isRealCloud) return;
                     if ((uf.savedName || '').startsWith('logo_sekolah_') || (uf.name || '').startsWith('logo_sekolah_')) return;
                     const ufCopy = Object.assign({}, uf);
                     if (!ufCopy.user || ufCopy.user === 'Umum') ufCopy.user = uName;
@@ -1468,7 +1468,7 @@
       Object.keys(parsed.scores).forEach(k => {
         if (parsed.scores[k] && Array.isArray(parsed.scores[k].uploadedFiles)) {
           parsed.scores[k].uploadedFiles = parsed.scores[k].uploadedFiles.filter(f => {
-            if (!f || delSet.has(f.id) || (f.savedName && delSet.has(f.savedName)) || (f.name && delSet.has(f.name))) return false;
+            const isRealCloud = Object.values(fileMetaMap).some(cf => cf.id === f.id || cf.fileKey === f.fileKey || (cf.savedName && (cf.savedName === f.savedName || cf.savedName === f.name))); if (!isRealCloud) return false;
             if ((f.savedName || '').startsWith('logo_sekolah_') || (f.name || '').startsWith('logo_sekolah_')) return false;
             return isUserFileMatch(f, userId, uName, settings.users || []);
           });
@@ -2235,7 +2235,7 @@
                 if (!f) return;
                 const fId = f.id || f.fileKey || f.savedName || f.name;
                 if (!fId || seenIds.has(fId)) return;
-                if (deletedSet.has(fId) || (f.savedName && deletedSet.has(f.savedName)) || (f.name && deletedSet.has(f.name))) return;
+                const isRealCloud = allMetaFiles.some(cf => cf.id === f.id || cf.fileKey === f.fileKey || (cf.savedName && (cf.savedName === f.savedName || cf.savedName === f.name))); if (!isRealCloud) return;
                 if (!isAllView) {
                   if (!isUserFileMatch(f, targetUserId, targetUserName, this.userList)) return;
                 }
