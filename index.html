@@ -4,13 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem E-PKKS 2026</title>
-  <!-- PDF.js Local Engine with CDN Fallback -->
+  <!-- In-App Document Engines: PDF, DOCX, XLSX -->
   <script src="js/pdf.min.js"></script>
   <script>
     if (!window.pdfjsLib) {
       document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"><\/script>');
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.3/dist/docx-preview.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       if (window.pdfjsLib) {
@@ -195,6 +198,20 @@
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 8px !important;
       }
+      .modal-overlay {
+        padding: 0 !important;
+        align-items: stretch !important;
+      }
+      .modal-content {
+        border-radius: 0 !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+      }
+      .preview-modal-header {
+        padding: 8px 10px !important;
+      }
     }
 
     @media print {
@@ -342,6 +359,256 @@
     const DEFAULT_GDRIVE_FOLDER_ID = "1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x";
     const DEFAULT_GDRIVE_EXEC_URL = "https://script.google.com/macros/s/AKfycbykNKnIhlwXTr-u6OX7rBbAmyyWq1J3OKtJUOQ5ocg1yowiyswFIUEByRbipMQN9qBM/exec";
 
+    // PEMETAAN ID GOOGLE DRIVE RESMI DARI FOLDER 1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x (SDIT ANNISA)
+    const KNOWN_GDRIVE_IDS = {
+      "Admin (Abdul Yakub, S.Ag)_20261010024033_kalandra.jpeg": "1zPGg9h2qfDTSMnOZMkrEIMQtcXAAMtNL",
+      "Admin (Abdul Yakub, S.Ag)_20261010024449_ilham.jpeg": "14WlSHMvQvQgZtS5O1r1MlOr2voobwJXC",
+      "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx": "1LlgvlayZidicpA3tS025wn3jyOzIn-wB",
+      "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx": "1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV",
+      "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx": "1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh",
+      "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx": "1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G",
+      "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg": "1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3",
+      "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg": "1Gi0ofc3376p-kRR9BByeVhZKlabM-gja",
+      "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg": "1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2",
+      "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png": "12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN",
+      "logo_sekolah_1791525039088_logo-annisa.png": "1vYNHMoezrz6Imwy0ASTj6t6_3ZjZQnd2",
+      "test_check.txt": "1yMsKQofOfFHlOrP2KcznPKHohXGx4ACh",
+      "kalandra.jpeg": "1zPGg9h2qfDTSMnOZMkrEIMQtcXAAMtNL",
+      "ilham.jpeg": "14WlSHMvQvQgZtS5O1r1MlOr2voobwJXC",
+      "RPM_B._INDO__BAB_3_.docx": "1LlgvlayZidicpA3tS025wn3jyOzIn-wB",
+      "RPM_B._INDO__BAB_1_.docx": "1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV",
+      "RPM_PEND._PANCASILA__BAB_1_.docx": "1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh",
+      "KSP_SDIT_ANNISA_2026-2027__1_.docx": "1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G",
+      "17915317903917935861297302460581.jpg": "1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3",
+      "17915318036342817169655685016059.jpg": "1Gi0ofc3376p-kRR9BByeVhZKlabM-gja",
+      "IMG-20261009-WA0011.jpg": "1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2",
+      "file_000000009d4881fa848358445b2691d7.png": "12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN"
+    };
+
+    function resolveGdriveFileMeta(file) {
+      if (!file) return null;
+      let gId = file.gdriveFileId || file.driveFileId || '';
+      if (!gId) {
+        const sName = file.savedName || file.name || '';
+        const oName = file.originalName || '';
+        if (KNOWN_GDRIVE_IDS[sName]) gId = KNOWN_GDRIVE_IDS[sName];
+        else if (KNOWN_GDRIVE_IDS[oName]) gId = KNOWN_GDRIVE_IDS[oName];
+      }
+      if (!gId) {
+        const urlStr = file.url || file.driveUrl || file.driveFileUrl || '';
+        const m = urlStr.match(/\/file\/d\/([a-zA-Z0-9_-]{25,})/);
+        if (m) gId = m[1];
+      }
+      if (gId) {
+        file.gdriveFileId = gId;
+        file.driveFileUrl = `https://drive.google.com/file/d/${gId}/view`;
+        file.drivePreviewUrl = `https://drive.google.com/file/d/${gId}/preview`;
+        if (!file.url || (!file.url.startsWith('blob:') && !file.url.startsWith('data:'))) {
+          file.url = file.drivePreviewUrl;
+        }
+      }
+      return file;
+    }
+
+    // INVENTORY OTOMATIS BERKAS GOOGLE DRIVE FOLDER 1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x (SDIT ANNISA)
+    // Tampil otomatis di HP / perangkat manapun tanpa klik manual!
+    const INITIAL_GDRIVE_FILES = [
+      {
+        id: "gd_susanti_20261010021924_abrina",
+        fileKey: "gd_susanti_20261010021924_abrina",
+        name: "Susanti, S.Kom, S.Pd_20261010021924_abrina.jpeg",
+        savedName: "Susanti, S.Kom, S.Pd_20261010021924_abrina.jpeg",
+        originalName: "abrina.jpeg",
+        user: "Susanti, S.Kom, S.Pd",
+        userId: "susanti",
+        itemId: "1.1",
+        size: "128.5 KB",
+        mimeType: "image/jpeg",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791598764000
+      },
+      {
+        id: "gd_susanti_20261009072938_file",
+        fileKey: "gd_susanti_20261009072938_file",
+        name: "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png",
+        savedName: "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png",
+        originalName: "file_000000009d4881fa848358445b2691d7.png",
+        user: "Susanti, S.Kom, S.Pd",
+        userId: "susanti",
+        itemId: "1.1",
+        size: "2436.4 KB",
+        mimeType: "image/png",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN",
+        driveFileUrl: "https://drive.google.com/file/d/12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN/preview",
+        url: "https://drive.google.com/file/d/12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791530978000
+      },
+      {
+        id: "gd_susanti_20261009055930_wa0011",
+        fileKey: "gd_susanti_20261009055930_wa0011",
+        name: "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg",
+        savedName: "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg",
+        originalName: "IMG-20261009-WA0011.jpg",
+        user: "Susanti, S.Kom, S.Pd",
+        userId: "susanti",
+        itemId: "1.1",
+        size: "142.8 KB",
+        mimeType: "image/jpeg",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2",
+        driveFileUrl: "https://drive.google.com/file/d/1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2/preview",
+        url: "https://drive.google.com/file/d/1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791525570000
+      },
+      {
+        id: "gd_esthy_20261009074330_jpg",
+        fileKey: "gd_esthy_20261009074330_jpg",
+        name: "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg",
+        savedName: "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg",
+        originalName: "17915318036342817169655685016059.jpg",
+        user: "N. Esthy Ening S., S.Sos",
+        userId: "esthy_ening",
+        itemId: "1.1",
+        size: "4659.6 KB",
+        mimeType: "image/jpeg",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "1Gi0ofc3376p-kRR9BByeVhZKlabM-gja",
+        driveFileUrl: "https://drive.google.com/file/d/1Gi0ofc3376p-kRR9BByeVhZKlabM-gja/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/1Gi0ofc3376p-kRR9BByeVhZKlabM-gja/preview",
+        url: "https://drive.google.com/file/d/1Gi0ofc3376p-kRR9BByeVhZKlabM-gja/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791531810000
+      },
+      {
+        id: "gd_esthy_20261009074317_jpg",
+        fileKey: "gd_esthy_20261009074317_jpg",
+        name: "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg",
+        savedName: "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg",
+        originalName: "17915317903917935861297302460581.jpg",
+        user: "N. Esthy Ening S., S.Sos",
+        userId: "esthy_ening",
+        itemId: "1.1",
+        size: "4546.2 KB",
+        mimeType: "image/jpeg",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3",
+        driveFileUrl: "https://drive.google.com/file/d/1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3/preview",
+        url: "https://drive.google.com/file/d/1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791531797000
+      },
+      {
+        id: "gd_esthy_20261009043538_ksp",
+        fileKey: "gd_esthy_20261009043538_ksp",
+        name: "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx",
+        savedName: "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx",
+        originalName: "KSP_SDIT_ANNISA_2026-2027__1_.docx",
+        user: "N. Esthy Ening S., S.Sos",
+        userId: "esthy_ening",
+        itemId: "1.2",
+        size: "342.1 KB",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G",
+        driveFileUrl: "https://drive.google.com/file/d/1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G/preview",
+        url: "https://drive.google.com/file/d/1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791520538000
+      },
+      {
+        id: "gd_esthy_20261009043136_rpm_pancasila",
+        fileKey: "gd_esthy_20261009043136_rpm_pancasila",
+        name: "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx",
+        savedName: "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx",
+        originalName: "RPM_PEND._PANCASILA__BAB_1_.docx",
+        user: "N. Esthy Ening S., S.Sos",
+        userId: "esthy_ening",
+        itemId: "1.1",
+        size: "285.3 KB",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh",
+        driveFileUrl: "https://drive.google.com/file/d/1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh/preview",
+        url: "https://drive.google.com/file/d/1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791520296000
+      },
+      {
+        id: "gd_esthy_20261009043109_rpm_bindo_bab1",
+        fileKey: "gd_esthy_20261009043109_rpm_bindo_bab1",
+        name: "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx",
+        savedName: "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx",
+        originalName: "RPM_B._INDO__BAB_1_.docx",
+        user: "N. Esthy Ening S., S.Sos",
+        userId: "esthy_ening",
+        itemId: "1.1",
+        size: "291.8 KB",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV",
+        driveFileUrl: "https://drive.google.com/file/d/1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV/preview",
+        url: "https://drive.google.com/file/d/1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791520269000
+      },
+      {
+        id: "gd_esthy_20261009042605_rpm_bindo_bab3",
+        fileKey: "gd_esthy_20261009042605_rpm_bindo_bab3",
+        name: "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx",
+        savedName: "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx",
+        originalName: "RPM_B._INDO__BAB_3_.docx",
+        user: "N. Esthy Ening S., S.Sos",
+        userId: "esthy_ening",
+        itemId: "1.1",
+        size: "268.4 KB",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        folder: "Google Drive",
+        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
+        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
+        gdriveFileId: "1LlgvlayZidicpA3tS025wn3jyOzIn-wB",
+        driveFileUrl: "https://drive.google.com/file/d/1LlgvlayZidicpA3tS025wn3jyOzIn-wB/view",
+        drivePreviewUrl: "https://drive.google.com/file/d/1LlgvlayZidicpA3tS025wn3jyOzIn-wB/preview",
+        url: "https://drive.google.com/file/d/1LlgvlayZidicpA3tS025wn3jyOzIn-wB/preview",
+        isDrive: true,
+        isFirebaseBridge: true,
+        timestamp: 1791519965000
+      }
+    ];
+
     function normalizeFirebaseUrl(url) {
       let u = String(url || PERMANENT_APPS_SCRIPT_URL || '').trim();
       if (!u || u.includes('script.google.com')) {
@@ -383,7 +650,9 @@
 
     function detectItemCodeFromFileName(fileName) {
       if (!fileName) return '1.1';
-      const str = String(fileName);
+      const str = String(fileName).toUpperCase();
+      if (str.includes('KSP') || str.includes('KURIKULUM')) return '1.2';
+      if (str.includes('RPM') || str.includes('RPP') || str.includes('MODUL') || str.includes('PROTA') || str.includes('PROMES') || str.includes('ATP')) return '1.1';
       const m = str.match(/(?:^|[_\-\s\[(])([1-8]\.[1-9]|6\.1[0-5]|3\.[1-8]|4\.[1-5]|5\.[1-4]|7\.[1-3]|8\.[1-3])(?:[_\-\s\])]|$)/);
       if (m && m[1]) return m[1];
       return '1.1';
@@ -453,11 +722,24 @@
 
     function getLocalFileMetaMap(npsn) {
       npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
+      let map = {};
       try {
         const raw = localStorage.getItem('pkks_uploaded_files_meta_' + npsn);
-        if (raw) return JSON.parse(raw) || {};
+        if (raw) map = JSON.parse(raw) || {};
       } catch(e) {}
-      return {};
+
+      // Otomatis sinkronkan 9 berkas Google Drive SDIT ANNISA (20231556) ke semua browser & HP
+      if (npsn === '20231556') {
+        const delSet = getDeletedFilesSet(npsn);
+        INITIAL_GDRIVE_FILES.forEach(initFile => {
+          if (!delSet.has(initFile.id) && !delSet.has(initFile.savedName) && !delSet.has(initFile.name)) {
+            if (!map[initFile.id]) {
+              map[initFile.id] = Object.assign({}, initFile);
+            }
+          }
+        });
+      }
+      return map;
     }
 
     function saveLocalFileMeta(npsn, metaObj) {
@@ -489,7 +771,10 @@
       if (validKeys.length === 0) return;
       try {
         const delSet = getDeletedFilesSet(npsn);
-        validKeys.forEach(k => delSet.add(k));
+        validKeys.forEach(k => {
+          delSet.add(k);
+          delSet.add(toFirebaseKey(k));
+        });
         localStorage.setItem('pkks_deleted_files_' + npsn, JSON.stringify(Array.from(delSet)));
 
         const map = getLocalFileMetaMap(npsn);
@@ -529,6 +814,39 @@
             } catch(e) {}
           }
         });
+
+        // Also purge from window.state.scores if live (Instant UI update!)
+        if (window.state && window.state.scores) {
+          let scorePurged = false;
+          Object.keys(window.state.scores).forEach(itemId => {
+            const itemVal = window.state.scores[itemId];
+            if (itemVal && Array.isArray(itemVal.uploadedFiles)) {
+              const before = itemVal.uploadedFiles.length;
+              itemVal.uploadedFiles = itemVal.uploadedFiles.filter(f => {
+                return !validKeys.includes(f.id) && !validKeys.includes(f.fileKey) && !validKeys.includes(f.savedName) && !validKeys.includes(f.name);
+              });
+              if (itemVal.uploadedFiles.length !== before) scorePurged = true;
+            }
+          });
+          if (scorePurged && typeof renderScores === 'function') {
+            try { renderScores(); } catch(e) {}
+          }
+        }
+
+        // Asynchronously broadcast deletion tombstones to Firebase Realtime Database
+        try {
+          const s = getSchoolSettings(npsn);
+          const baseUrl = normalizeFirebaseUrl(s.appsScriptUrl);
+          const safeNpsn = toFirebaseKey(npsn);
+          validKeys.forEach(k => {
+            const safeK = toFirebaseKey(k);
+            originalFetch(`${baseUrl}/pkks_deleted_files/${safeNpsn}/${safeK}.json`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key: safeK, name: k, deletedAt: Date.now() })
+            }).catch(() => {});
+          });
+        } catch(e) {}
       } catch(e) {}
     }
 
@@ -604,6 +922,54 @@
       return urlOrId;
     }
 
+    function createCompressedPreview(file, maxDimension = 900, quality = 0.7) {
+      return new Promise((resolve) => {
+        if (!file) {
+          resolve('');
+          return;
+        }
+        const fileType = file.type || '';
+        const fileName = (file.name || '').toLowerCase();
+        const isImg = fileType.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(fileName);
+        if (!isImg) {
+          resolve('');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            try {
+              let w = img.naturalWidth || img.width;
+              let h = img.naturalHeight || img.height;
+              if (w > maxDimension || h > maxDimension) {
+                if (w > h) {
+                  h = Math.round((h * maxDimension) / w);
+                  w = maxDimension;
+                } else {
+                  w = Math.round((w * maxDimension) / h);
+                  h = maxDimension;
+                }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              const previewData = canvas.toDataURL('image/jpeg', quality);
+              resolve(previewData);
+            } catch (err) {
+              resolve('');
+            }
+          };
+          img.onerror = () => resolve('');
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+    }
+
     async function uploadFileToFirebase(file, filename, userName, userId, itemId, fileId, npsn, firebaseUrl, gdriveLink) {
       try {
         npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
@@ -615,6 +981,11 @@
         const fId = fileId || ('file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
         const safeFileId = toFirebaseKey(fId);
         const isLogo = String(filename || '').startsWith('logo_sekolah_');
+
+        let previewUrl = '';
+        if (file && (file.type ? file.type.startsWith('image/') : /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(filename))) {
+          previewUrl = await createCompressedPreview(file);
+        }
 
         const driveFolderUrl = `https://drive.google.com/drive/folders/${folderId}`;
         const metaObj = {
@@ -632,7 +1003,8 @@
           folder: 'Google Drive',
           driveFolderId: folderId,
           driveUrl: driveFolderUrl,
-          url: '',
+          previewUrl: previewUrl || '',
+          url: previewUrl || '',
           isDrive: true,
           isFirebaseBridge: true,
           timestamp: Date.now()
@@ -722,6 +1094,26 @@
 
       try {
         const delPromises = [];
+
+        // 1. Fetch remote pkks_file_meta to catch ANY key with matching filename or id
+        try {
+          const remoteMeta = await originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+          if (remoteMeta && typeof remoteMeta === 'object') {
+            Object.keys(remoteMeta).forEach(rKey => {
+              const rItem = remoteMeta[rKey];
+              if (rItem) {
+                const rName = rItem.savedName || rItem.name || rItem.fileName || '';
+                const rOrig = rItem.originalName || '';
+                const rId = rItem.id || rItem.fileKey || '';
+                if (rName === filename || rOrig === filename || (origName && (rName === origName || rOrig === origName)) || (fileId && (rId === fileId || rKey === fileId))) {
+                  keysToDelete.add(toFirebaseKey(rKey));
+                }
+              }
+            });
+          }
+        } catch(e) {}
+
+        // 2. Delete from pkks_file_meta and pkks_files in Firebase
         keysToDelete.forEach(sKey => {
           if (!sKey) return;
           delPromises.push(
@@ -730,13 +1122,62 @@
           );
         });
 
-        // Also sync cleaned owner data to Firebase bridge if ownerUserId is known
+        // 3. Write permanent tombstones to /pkks_deleted_files in Firebase
+        const tombstoneObj = {
+          name: filename || origName || '',
+          deletedAt: Date.now(),
+          deletedBy: ownerUserId || (window.state && window.state.currentUser ? window.state.currentUser.id : 'admin')
+        };
+        const allTombKeys = new Set([...Array.from(keysToDelete), toFirebaseKey(filename), toFirebaseKey(origName), toFirebaseKey(fileId), toFirebaseKey(fileKey)].filter(Boolean));
+        allTombKeys.forEach(tKey => {
+          delPromises.push(
+            originalFetch(`${baseUrl}/pkks_deleted_files/${safeNpsn}/${tKey}.json`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(Object.assign({ key: tKey }, tombstoneObj))
+            })
+          );
+        });
+
+        // 4. Also clean from Firebase /pkks_data/${safeNpsn}/all.json and user json
+        const cleanScoreFirebase = async (targetUser) => {
+          try {
+            const dataRes = await originalFetch(`${baseUrl}/pkks_data/${safeNpsn}/${targetUser}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+            if (dataRes && dataRes.payloadJson) {
+              const payload = JSON.parse(dataRes.payloadJson);
+              let changed = false;
+              if (payload.scores) {
+                Object.keys(payload.scores).forEach(itemCode => {
+                  const itm = payload.scores[itemCode];
+                  if (itm && Array.isArray(itm.uploadedFiles)) {
+                    const before = itm.uploadedFiles.length;
+                    itm.uploadedFiles = itm.uploadedFiles.filter(f => {
+                      const fN = f.savedName || f.name || '';
+                      const fId = f.id || f.fileKey || '';
+                      return fN !== filename && fN !== origName && fId !== fileId && fId !== fileKey;
+                    });
+                    if (itm.uploadedFiles.length !== before) changed = true;
+                  }
+                });
+              }
+              if (changed) {
+                dataRes.payloadJson = JSON.stringify(payload);
+                dataRes.updatedAt = Date.now();
+                await originalFetch(`${baseUrl}/pkks_data/${safeNpsn}/${targetUser}.json`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(dataRes)
+                });
+              }
+            }
+          } catch(e) {}
+        };
+        delPromises.push(cleanScoreFirebase('all'));
         if (ownerUserId && ownerUserId !== 'all' && ownerUserId !== 'semua') {
-          const ownerData = getSchoolUserData(npsn, ownerUserId);
-          delPromises.push(syncUserDataToFirebase(npsn, ownerUserId, ownerData, baseUrl));
+          delPromises.push(cleanScoreFirebase(ownerUserId));
         }
 
-        // Hapus berkas langsung dari folder Google Drive menggunakan URLSearchParams
+        // 5. Delete file directly from Google Drive folder
         if (activeFolderId && DEFAULT_GDRIVE_EXEC_URL && filename) {
           const p = new URLSearchParams();
           p.append('action', 'delete');
@@ -819,10 +1260,13 @@
         const driveFolderUrl = `https://drive.google.com/drive/folders/${activeFolderId}`;
 
         // Multi-source cloud fetching:
-        // 1. New metadata bridge records (/pkks_file_meta)
-        // 2. Legacy / previous uploaded records (/pkks_files) - so NO previous uploads are ever lost!
-        // 3. Complete school user scores & data (/pkks_data)
-        // 4. Remote school settings (/pkks_settings)
+        // 1. Deleted files tombstones (/pkks_deleted_files) - guarantees realtime deletion across devices!
+        // 2. New metadata bridge records (/pkks_file_meta)
+        // 3. Legacy / previous uploaded records (/pkks_files)
+        // 4. Complete school user scores & data (/pkks_data)
+        // 5. Remote school settings (/pkks_settings)
+        const deletedPromise = originalFetch(`${baseUrl}/pkks_deleted_files/${safeNpsn}.json`)
+          .then(r => r.ok ? r.json() : null).catch(() => null);
         const metaPromise = originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}.json`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
         const legacyFilesPromise = originalFetch(`${baseUrl}/pkks_files/${safeNpsn}.json`)
@@ -840,13 +1284,30 @@
             .catch(() => null);
         }
 
-        const [remoteMetaMap, legacyFilesMap, remoteDataRes, remoteSettings, gdriveListRes] = await Promise.allSettled([
+        const [remoteDelMap, remoteMetaMap, legacyFilesMap, remoteDataRes, remoteSettings, gdriveListRes] = await Promise.allSettled([
+          deletedPromise,
           metaPromise,
           legacyFilesPromise,
           dataPromise,
           settingsPromise,
           gdriveFilesPromise
         ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
+
+        // Merge remote deleted files into delSet
+        if (remoteDelMap && typeof remoteDelMap === 'object' && !remoteDelMap.error) {
+          let delChanged = false;
+          Object.keys(remoteDelMap).forEach(dk => {
+            const dVal = remoteDelMap[dk];
+            if (dk && !delSet.has(dk)) { delSet.add(dk); delChanged = true; }
+            if (dVal && typeof dVal === 'object') {
+              if (dVal.name && !delSet.has(dVal.name)) { delSet.add(dVal.name); delChanged = true; }
+              if (dVal.key && !delSet.has(dVal.key)) { delSet.add(dVal.key); delChanged = true; }
+            }
+          });
+          if (delChanged) {
+            localStorage.setItem('pkks_deleted_files_' + npsn, JSON.stringify(Array.from(delSet)));
+          }
+        }
 
         // Sync settings if available from cloud
         if (remoteSettings && typeof remoteSettings === 'object' && !remoteSettings.error) {
@@ -865,13 +1326,51 @@
         const localMap = getLocalFileMetaMap(npsn);
         let metaUpdated = false;
 
+        // ACTIVELY PURGE ALL DELETED FILES FROM localMap
+        Object.keys(localMap).forEach(fid => {
+          const m = localMap[fid];
+          if (delSet.has(fid) || delSet.has(toFirebaseKey(fid)) || (m && (delSet.has(m.id) || delSet.has(m.fileKey) || delSet.has(m.savedName) || delSet.has(m.name) || delSet.has(toFirebaseKey(m.savedName || '')) || delSet.has(toFirebaseKey(m.name || ''))))) {
+            delete localMap[fid];
+            metaUpdated = true;
+            try { PkksFileDB.delete(fid); } catch(e) {}
+            if (m && m.savedName) { try { PkksFileDB.delete(m.savedName); } catch(e) {} }
+          }
+        });
+
+        // ACTIVELY PURGE ALL DELETED FILES FROM window.state.scores (Realtime UI update!)
+        if (window.state && window.state.scores) {
+          let scoreCleaned = false;
+          Object.keys(window.state.scores).forEach(itemId => {
+            const sc = window.state.scores[itemId];
+            if (sc && Array.isArray(sc.uploadedFiles)) {
+              const before = sc.uploadedFiles.length;
+              sc.uploadedFiles = sc.uploadedFiles.filter(f => {
+                const fId = f.id || f.fileKey || '';
+                const fName = f.savedName || f.name || '';
+                const isDel = delSet.has(fId) || delSet.has(toFirebaseKey(fId)) || delSet.has(fName) || delSet.has(toFirebaseKey(fName));
+                return !isDel;
+              });
+              if (sc.uploadedFiles.length !== before) scoreCleaned = true;
+            }
+          });
+          if (scoreCleaned) {
+            try { renderScores(); } catch(e) {}
+          }
+        }
+
+        const isFileDeleted = (fId, sName, oName) => {
+          return delSet.has(fId) || delSet.has(toFirebaseKey(fId)) ||
+                 delSet.has(sName) || delSet.has(toFirebaseKey(sName)) ||
+                 delSet.has(oName) || delSet.has(toFirebaseKey(oName));
+        };
+
         const registerCloudFile = (fileObj) => {
           if (!fileObj || typeof fileObj !== 'object') return;
           const fId = fileObj.id || fileObj.fileKey || ('f_' + Math.random().toString(36).substr(2, 8));
           const sName = fileObj.savedName || fileObj.name || fId;
           const oName = fileObj.originalName || fileObj.name || sName;
 
-          if (delSet.has(fId) || delSet.has(sName) || delSet.has(oName)) return;
+          if (isFileDeleted(fId, sName, oName)) return;
           if (sName.startsWith('logo_sekolah_') || oName.startsWith('logo_sekolah_')) return;
 
           const fItemId = fileObj.itemId || detectItemCodeFromFileName(sName) || '1.1';
@@ -893,11 +1392,25 @@
             folder: 'Google Drive',
             driveFolderId: fFolderId,
             driveUrl: fDriveUrl,
-            url: fileObj.url && !fileObj.url.startsWith('data:') ? fileObj.url : '',
+            gdriveFileId: fileObj.gdriveFileId || '',
+            driveFileUrl: fileObj.driveFileUrl || '',
+            drivePreviewUrl: fileObj.drivePreviewUrl || '',
+            previewUrl: fileObj.previewUrl || fileObj.thumbnail || '',
+            url: fileObj.previewUrl || fileObj.drivePreviewUrl || (fileObj.url && !fileObj.url.startsWith('data:') ? fileObj.url : ''),
             isDrive: true,
             isFirebaseBridge: true,
             timestamp: fileObj.timestamp || Date.now()
           };
+
+          resolveGdriveFileMeta(cleanFile);
+
+          if (cleanFile.previewUrl && cleanFile.previewUrl.startsWith('data:')) {
+            const pBlob = dataUrlToBlob(cleanFile.previewUrl);
+            if (pBlob) {
+              PkksFileDB.set(cleanFile.id, pBlob);
+              PkksFileDB.set(cleanFile.savedName, pBlob);
+            }
+          }
 
           if (!localMap[fId]) {
             localMap[fId] = cleanFile;
@@ -906,6 +1419,15 @@
             Object.assign(localMap[fId], cleanFile);
           }
         };
+
+        // 0. Otomatis daftarkan berkas awal Google Drive SDIT ANNISA
+        if (npsn === '20231556') {
+          INITIAL_GDRIVE_FILES.forEach(initFile => {
+            if (!isFileDeleted(initFile.id, initFile.savedName, initFile.name)) {
+              registerCloudFile(initFile);
+            }
+          });
+        }
 
         // 1. Process Google Drive listed files
         let driveItems = [];
@@ -919,7 +1441,8 @@
           if (!df) return;
           const dName = df.name || df.filename || df.title || '';
           if (!dName || dName.startsWith('logo_sekolah_')) return;
-          
+          if (isFileDeleted(df.id || '', dName, dName)) return;
+
           let deducedUser = 'Pengunggah';
           let deducedUserId = 'admin';
           for (const u of currentUsers) {
@@ -949,15 +1472,17 @@
         if (remoteMetaMap && typeof remoteMetaMap === 'object' && !remoteMetaMap.error) {
           Object.keys(remoteMetaMap).forEach(k => {
             const m = remoteMetaMap[k];
-            if (m) registerCloudFile(m);
+            if (m && !isFileDeleted(k, m.savedName || m.name || '', m.originalName || '')) {
+              registerCloudFile(m);
+            }
           });
         }
 
-        // 3. Process Firebase legacy pkks_files (recover files from previous versions)
+        // 3. Process Firebase legacy pkks_files
         if (legacyFilesMap && typeof legacyFilesMap === 'object' && !legacyFilesMap.error) {
           Object.keys(legacyFilesMap).forEach(k => {
             const m = legacyFilesMap[k];
-            if (m) {
+            if (m && !isFileDeleted(k, m.savedName || m.name || '', m.originalName || '')) {
               const fileCopy = Object.assign({}, m);
               if (fileCopy.dataUrl) delete fileCopy.dataUrl;
               registerCloudFile(fileCopy);
@@ -995,8 +1520,11 @@
               if (!lItem.catatan && rItem.catatan) lItem.catatan = rItem.catatan;
               if (!Array.isArray(lItem.uploadedFiles)) lItem.uploadedFiles = [];
 
+              // Clean local files matching deletion
+              lItem.uploadedFiles = lItem.uploadedFiles.filter(f => !isFileDeleted(f.id, f.savedName, f.name));
+
               (rItem.uploadedFiles || []).forEach(rf => {
-                if (!rf || delSet.has(rf.id) || delSet.has(rf.savedName) || delSet.has(rf.name)) return;
+                if (!rf || isFileDeleted(rf.id, rf.savedName, rf.name)) return;
                 registerCloudFile(Object.assign({ itemId: itemId, userId: targetUid }, rf));
                 if (!lItem.uploadedFiles.some(lf => lf.id === rf.id || (lf.savedName && lf.savedName === rf.savedName))) {
                   lItem.uploadedFiles.push(rf);
@@ -1028,7 +1556,7 @@
 
         // 5. Ensure any discovered cloud files without records in pkks_file_meta get mirrored to Firebase bridge
         Object.values(localMap).forEach(meta => {
-          if (!meta || !meta.id || delSet.has(meta.id)) return;
+          if (!meta || !meta.id || isFileDeleted(meta.id, meta.savedName, meta.name)) return;
           if (remoteMetaMap && remoteMetaMap[toFirebaseKey(meta.id)]) return;
           const safeFileId = toFirebaseKey(meta.id);
           originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${safeFileId}.json`, {
@@ -1040,6 +1568,68 @@
 
       } catch (e) {
         console.warn("[Firebase] syncSchoolDataFromFirebase notice:", e);
+      }
+    }
+
+    function initRealtimeCloudListener(npsn) {
+      npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
+      const s = getSchoolSettings(npsn);
+      const baseUrl = normalizeFirebaseUrl(s.appsScriptUrl);
+      const safeNpsn = toFirebaseKey(npsn);
+
+      // 1. Firebase Server-Sent Events (SSE) Listener for Realtime Deletions
+      try {
+        if (window.EventSource && !window._fbDelEventSource) {
+          const delUrl = `${baseUrl}/pkks_deleted_files/${safeNpsn}.json`;
+          const es = new EventSource(delUrl);
+          es.addEventListener('put', (e) => {
+            try {
+              const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+              syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
+            } catch(err) {}
+          });
+          window._fbDelEventSource = es;
+        }
+      } catch(e) {}
+
+      // 2. Firebase SSE Listener for Realtime Metadata
+      try {
+        if (window.EventSource && !window._fbMetaEventSource) {
+          const metaUrl = `${baseUrl}/pkks_file_meta/${safeNpsn}.json`;
+          const esMeta = new EventSource(metaUrl);
+          esMeta.addEventListener('put', (e) => {
+            try {
+              const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+              syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
+            } catch(err) {}
+          });
+          window._fbMetaEventSource = esMeta;
+        }
+      } catch(e) {}
+
+      // 3. Tab Visibility & Focus Listener (Instant update when switching to tab on mobile!)
+      if (!window._realtimeVisibilityBound) {
+        window._realtimeVisibilityBound = true;
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+            syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
+          }
+        });
+        window.addEventListener('focus', () => {
+          const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+          syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
+        });
+      }
+
+      // 4. Periodic Heartbeat Poller (Every 10 seconds in background)
+      if (!window._realtimePollInterval) {
+        window._realtimePollInterval = setInterval(() => {
+          if (!document.hidden) {
+            const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+            syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
+          }
+        }, 10000);
       }
     }
 
@@ -1965,6 +2555,7 @@
           }
           await this.loadUserData();
         }
+        initRealtimeCloudListener(npsn);
         renderApp();
       }
 
@@ -2173,6 +2764,32 @@
     }
 
     const state = new AppState();
+    window.state = state;
+
+    // SINKRONISASI OTOMATIS BACKGROUND (TANPA PERLU KLIK MANUAL)
+    if (!window.__pkksSyncInterval) {
+      window.__pkksSyncInterval = setInterval(async () => {
+        try {
+          if (window.state && window.state.currentUser && !window.state.previewFile) {
+            await window.state.loadUserData();
+          }
+        } catch(e) {}
+      }, 15000);
+    }
+    window.addEventListener('focus', async () => {
+      try {
+        if (window.state && window.state.currentUser && !window.state.previewFile) {
+          await window.state.loadUserData();
+        }
+      } catch(e) {}
+    });
+    window.addEventListener('online', async () => {
+      try {
+        if (window.state && window.state.currentUser && !window.state.previewFile) {
+          await window.state.loadUserData();
+        }
+      } catch(e) {}
+    });
 
     // HANDLER FUNCTIONS
     async function handleLogin(e) {
@@ -2203,6 +2820,7 @@
             localStorage.setItem('pkks_current_user', JSON.stringify(userObj));
           } catch(e) {}
           await state.loadUserData();
+          initRealtimeCloudListener(state.schoolNpsn);
           state.showToast(`✓ Selamat Datang, ${userObj.name}!`);
         } else {
           alert(data.message || 'Username atau Password salah!');
@@ -2221,6 +2839,7 @@
             localStorage.setItem('pkks_current_user', JSON.stringify(userObj));
           } catch(e) {}
           await state.loadUserData();
+          initRealtimeCloudListener(state.schoolNpsn);
           state.showToast(`✓ Selamat Datang, ${userObj.name}!`);
         } else {
           alert("Password salah!");
@@ -2855,11 +3474,22 @@
             let uploadedUrl = fileInfo.url || '';
             let savedName = fileInfo.savedName || formattedName || file.name;
             let fileId = fileInfo.id || clientFileId;
+            let previewUrl = fileInfo.previewUrl || '';
+            if (!previewUrl) {
+              previewUrl = await createCompressedPreview(file);
+            }
 
             // Guarantee file is in local IndexedDB for instant preview
             await PkksFileDB.set(fileId, file);
             if (savedName) await PkksFileDB.set(savedName, file);
             if (file.name) await PkksFileDB.set(file.name, file);
+            if (previewUrl) {
+              const prevBlob = dataUrlToBlob(previewUrl);
+              if (prevBlob) {
+                await PkksFileDB.set(fileId + '_preview', prevBlob);
+                if (savedName) await PkksFileDB.set(savedName + '_preview', prevBlob);
+              }
+            }
 
             const fileEntry = {
               id: fileId,
@@ -2868,7 +3498,8 @@
               name: savedName,
               savedName: savedName,
               originalName: file.name,
-              url: uploadedUrl.startsWith('data:') ? '' : uploadedUrl,
+              previewUrl: previewUrl || '',
+              url: previewUrl || (uploadedUrl.startsWith('data:') ? '' : uploadedUrl),
               driveFolderId: activeFolderId,
               driveUrl: driveFolderUrl,
               isDrive: true,
@@ -2983,6 +3614,131 @@
       imageObj: null
     };
 
+    async function renderDocxPreview(file, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '<div style="color: #38bdf8; padding: 40px; text-align: center; font-weight: 700;">⏳ Memproses dan memuat dokumen DOCX ke layar...</div>';
+      try {
+        let blob = null;
+        if (file.isBlobUrl && file.url) {
+          blob = await fetch(file.url).then(r => r.blob()).catch(() => null);
+        }
+        if (!blob) {
+          const fileKey = file.fileKey || file.id;
+          blob = await PkksFileDB.get(fileKey) || await PkksFileDB.get(file.savedName) || await PkksFileDB.get(file.name);
+        }
+
+        if (blob && window.docx && typeof window.docx.renderAsync === 'function') {
+          container.innerHTML = '';
+          await window.docx.renderAsync(blob, container, null, {
+            inWrapper: true,
+            ignoreWidth: false,
+            ignoreHeight: false
+          });
+          return;
+        }
+
+        resolveGdriveFileMeta(file);
+        if (file.drivePreviewUrl) {
+          container.innerHTML = `<iframe src="${file.drivePreviewUrl}" width="100%" height="100%" style="border:none; min-height: 80vh; width: 100%; display: block;" allow="autoplay"></iframe>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <div style="text-align: center; padding: 50px 20px; color: #f8fafc; background: #1e293b; border-radius: 12px; margin: 20px;">
+            <div style="font-size: 52px; margin-bottom: 12px;">📝</div>
+            <h4 style="font-size: 16px; font-weight: 800; margin-bottom: 6px;">${file.name || 'Dokumen Word DOCX'}</h4>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px;">Berkas tersimpan aman di Google Drive sekolah.</p>
+            <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+              <a href="${file.driveUrl || 'https://drive.google.com/drive/folders/' + DEFAULT_GDRIVE_FOLDER_ID}" target="_blank" class="btn-primary" style="width: auto; padding: 10px 20px; background: #0284c7; text-decoration: none; font-weight: 700;">📂 Buka di Google Drive</a>
+              <a href="${file.url || '#'}" download="${file.name || 'dokumen.docx'}" class="btn-primary" style="width: auto; padding: 10px 20px; background: #059669; text-decoration: none; font-weight: 700;">⬇️ Unduh Berkas</a>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.warn("Docx render notice:", err);
+        resolveGdriveFileMeta(file);
+        if (file.drivePreviewUrl) {
+          container.innerHTML = `<iframe src="${file.drivePreviewUrl}" width="100%" height="100%" style="border:none; min-height: 80vh; width: 100%; display: block;" allow="autoplay"></iframe>`;
+        }
+      }
+    }
+
+    async function renderXlsxPreview(file, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '<div style="color: #38bdf8; padding: 40px; text-align: center; font-weight: 700;">⏳ Memproses lembar kerja Excel...</div>';
+      try {
+        let blob = null;
+        if (file.isBlobUrl && file.url) {
+          blob = await fetch(file.url).then(r => r.blob()).catch(() => null);
+        }
+        if (!blob) {
+          const fileKey = file.fileKey || file.id;
+          blob = await PkksFileDB.get(fileKey) || await PkksFileDB.get(file.savedName) || await PkksFileDB.get(file.name);
+        }
+
+        if (blob && window.XLSX) {
+          const buffer = await blob.arrayBuffer();
+          const workbook = XLSX.read(buffer, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[firstSheetName];
+          const htmlTable = XLSX.utils.sheet_to_html(sheet, { id: 'xlsx-table', editable: false });
+          container.innerHTML = `
+            <div style="padding: 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight: 800; color: #0f172a; font-size: 13px;">📊 Lembar Kerja: ${firstSheetName}</span>
+              <span style="font-size: 11px; color: #64748b; font-weight: 600;">Total Lembar: ${workbook.SheetNames.length}</span>
+            </div>
+            <div style="overflow: auto; max-height: 75vh; padding: 12px; background: white; color: #0f172a;">${htmlTable}</div>
+          `;
+          return;
+        }
+
+        resolveGdriveFileMeta(file);
+        if (file.drivePreviewUrl) {
+          container.innerHTML = `<iframe src="${file.drivePreviewUrl}" width="100%" height="100%" style="border:none; min-height: 80vh; width: 100%; display: block;" allow="autoplay"></iframe>`;
+          return;
+        }
+      } catch (err) {
+        console.warn("XLSX render notice:", err);
+        resolveGdriveFileMeta(file);
+        if (file.drivePreviewUrl) {
+          container.innerHTML = `<iframe src="${file.drivePreviewUrl}" width="100%" height="100%" style="border:none; min-height: 80vh; width: 100%; display: block;" allow="autoplay"></iframe>`;
+        }
+      }
+    }
+
+    async function renderTextPreview(file, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      try {
+        let textContent = '';
+        if (file.isBlobUrl && file.url) {
+          textContent = await fetch(file.url).then(r => r.text()).catch(() => '');
+        }
+        if (!textContent) {
+          const fileKey = file.fileKey || file.id;
+          const blob = await PkksFileDB.get(fileKey) || await PkksFileDB.get(file.savedName) || await PkksFileDB.get(file.name);
+          if (blob) {
+            textContent = await blob.text();
+          }
+        }
+        if (textContent) {
+          container.textContent = textContent;
+          return;
+        }
+        resolveGdriveFileMeta(file);
+        if (file.drivePreviewUrl) {
+          const parent = container.parentElement;
+          if (parent) {
+            parent.innerHTML = `<iframe src="${file.drivePreviewUrl}" width="100%" height="100%" style="border:none; min-height: 80vh; width: 100%; display: block;" allow="autoplay"></iframe>`;
+          }
+        }
+      } catch (e) {
+        container.textContent = "Gagal memuat isi berkas teks.";
+      }
+    }
+
     window.openFilePreviewById = async function(itemId, fileId) {
       const itemData = state.scores[itemId] || {};
       const files = itemData.uploadedFiles || [];
@@ -2992,29 +3748,51 @@
         return;
       }
 
+      resolveGdriveFileMeta(file);
+      const ext = (file.name || file.savedName || '').split('.').pop().toLowerCase();
+      const isDoc = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt'].includes(ext);
+
+      // Priority 1: Google Drive high-fidelity interactive preview for documents
+      if (isDoc && file.drivePreviewUrl) {
+        openPreview(file);
+        return;
+      }
+
       const npsn = state.schoolNpsn || localStorage.getItem('pkks_school_npsn') || '20231556';
 
-      // Priority 1: Check IndexedDB (instant, zero network latency, works offline)
+      // Priority 2: Check IndexedDB (instant, zero network latency, works offline)
       const fileKey = file.fileKey || file.id;
       let blob = await PkksFileDB.get(fileKey);
       if (!blob && file.id) blob = await PkksFileDB.get(file.id);
       if (!blob && file.savedName) blob = await PkksFileDB.get(file.savedName);
       if (!blob && file.name) blob = await PkksFileDB.get(file.name);
+      if (!blob && file.id) blob = await PkksFileDB.get(file.id + '_preview');
 
-      if (blob) {
+      if (blob && blob.size > 0) {
         const blobUrl = URL.createObjectURL(blob);
         const previewObj = Object.assign({}, file, { url: blobUrl, isBlobUrl: true });
         openPreview(previewObj);
         return;
       }
 
-      // Priority 2: Direct file URL if already present
-      if (file.url) {
+      // Priority 3: Direct file previewUrl or url if present
+      if (file.previewUrl && (file.previewUrl.startsWith('data:') || file.previewUrl.startsWith('blob:') || file.previewUrl.startsWith('http'))) {
+        const previewObj = Object.assign({}, file, { url: file.previewUrl });
+        openPreview(previewObj);
+        return;
+      }
+
+      if (file.drivePreviewUrl) {
         openPreview(file);
         return;
       }
 
-      // Priority 3: Fallback query via local API or Google Drive
+      if (file.url && (file.url.startsWith('data:') || file.url.startsWith('blob:') || file.url.startsWith('http'))) {
+        openPreview(file);
+        return;
+      }
+
+      // Priority 4: Fallback query via local API or Google Drive
       const rawName = file.savedName || file.name || '';
       const fallbackUrl = '/api/pdf-bytes?npsn=' + npsn + '&file=' + encodeURIComponent(rawName);
       const previewObj = Object.assign({}, file, { url: fallbackUrl });
@@ -3022,12 +3800,13 @@
     };
 
     function openPreview(file) {
+      resolveGdriveFileMeta(file);
       window.previewCanvasState = { zoom: 1, rotation: 0, imageObj: null };
       state.previewFile = file;
       renderApp();
-      
-      if (file.isDrive && file.url && !file.isBlobUrl && file.url.includes('drive.google.com')) {
-        return;
+
+      if (window.history && window.history.pushState) {
+        try { window.history.pushState({ pkksPreviewModalOpen: true }, ''); } catch(e) {}
       }
       
       const fileName = file.name || file.savedName || '';
@@ -3036,11 +3815,24 @@
       const npsn = state.schoolNpsn || '20231556';
       const fileApiUrl = file.url || ('/api/pdf-bytes?npsn=' + npsn + '&file=' + encodeURIComponent(rawName));
 
+      // If document is displayed via Google Drive preview iframe, no client DOM rendering needed
+      if (file.drivePreviewUrl && ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'].includes(ext)) {
+        return;
+      }
+
       setTimeout(() => {
         if (ext === 'pdf') {
-          renderPdfCanvas(fileApiUrl, 'pdf-canvas-container');
+          if (!file.drivePreviewUrl) {
+            renderPdfCanvas(fileApiUrl, 'pdf-canvas-container');
+          }
         } else if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) {
           renderImageCanvas(fileApiUrl, 'image-preview-canvas');
+        } else if (['docx', 'doc'].includes(ext)) {
+          renderDocxPreview(file, 'docx-preview-container');
+        } else if (['xlsx', 'xls', 'csv'].includes(ext)) {
+          renderXlsxPreview(file, 'xlsx-preview-container');
+        } else if (['txt', 'log', 'json'].includes(ext)) {
+          renderTextPreview(file, 'text-preview-container');
         }
       }, 50);
     }
@@ -3052,6 +3844,23 @@
       state.previewFile = null;
       renderApp();
     }
+    window.closePreview = closePreview;
+
+    window.addEventListener('popstate', () => {
+      if (window.state && window.state.previewFile) {
+        if (state.previewFile && state.previewFile.isBlobUrl && state.previewFile.url) {
+          try { URL.revokeObjectURL(state.previewFile.url); } catch(e) {}
+        }
+        state.previewFile = null;
+        renderApp();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && window.state && window.state.previewFile) {
+        closePreview();
+      }
+    });
 
     function renderImageCanvas(imgUrl, canvasId) {
       let canvas = document.getElementById(canvasId);
@@ -3081,13 +3890,37 @@
       img.onerror = function(err) {
         console.warn("Failed to load image on primary canvas src, attempting fallback:", err);
         const fallbackImg = document.getElementById('image-preview-fallback');
-        if (fallbackImg) {
+        if (fallbackImg && imgUrl && !imgUrl.includes('/api/pdf-bytes') && !imgUrl.startsWith('data:image/')) {
           fallbackImg.src = imgUrl;
           fallbackImg.style.display = 'block';
           if (canvas) canvas.style.display = 'none';
           if (loadingEl) loadingEl.style.display = 'none';
-        } else if (loadingEl) {
-          loadingEl.innerText = '⚠️ Gagal memuat file gambar.';
+        } else {
+          if (loadingEl) loadingEl.style.display = 'none';
+          const container = document.getElementById('image-canvas-container');
+          if (container) {
+            const rawFileName = (state.previewFile && (state.previewFile.name || state.previewFile.savedName)) || 'Berkas Gambar';
+            const fFolderId = extractFolderId((state.previewFile && state.previewFile.driveFolderId) || (state.settings && state.settings.googleDriveLink) || DEFAULT_GDRIVE_FOLDER_ID) || DEFAULT_GDRIVE_FOLDER_ID;
+            const driveHref = (state.previewFile && state.previewFile.driveUrl) || `https://drive.google.com/drive/folders/${fFolderId}`;
+            container.innerHTML = `
+              <div style="background:#1e293b; border:1.5px solid #38bdf8; border-radius:16px; padding:28px 20px; text-align:center; max-width:480px; margin:24px auto; color:white; box-shadow:0 12px 30px rgba(0,0,0,0.6);">
+                <div style="font-size:52px; margin-bottom:12px;">☁️</div>
+                <h4 style="font-size:16px; font-weight:800; color:#38bdf8; margin-bottom:8px;">Berkas Tersimpan di Google Drive</h4>
+                <p style="font-size:12px; color:#cbd5e1; margin-bottom:6px; word-break:break-all;"><strong>${rawFileName}</strong></p>
+                <p style="font-size:11px; color:#94a3b8; margin-bottom:20px; line-height:1.6;">
+                  Berkas ini diunggah dari perangkat lain dan tersimpan aman di Google Drive sekolah. Anda dapat membukanya secara langsung dengan resolusi penuh.
+                </p>
+                <div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
+                  <a href="${driveHref}" target="_blank" class="btn-primary" style="padding:12px 24px; font-size:13px; background:#0284c7; text-decoration:none; font-weight:800; border-radius:10px; display:inline-flex; align-items:center; gap:8px;">
+                    📂 Buka di Google Drive
+                  </a>
+                  <button type="button" onclick="closePreview()" style="background:#dc2626; color:white; border:none; padding:10px 24px; font-size:13px; font-weight:800; border-radius:10px; cursor:pointer;">
+                    ⬅️ KEMBALI KE APLIKASI
+                  </button>
+                </div>
+              </div>
+            `;
+          }
         }
       };
 
@@ -4085,7 +4918,7 @@
                     <span style="font-size: 26px; display: block; margin-bottom: 4px;">${state.settings.googleDriveLink ? '☁️' : '📂'}</span>
                     <strong style="font-size: 12px; color: #0f172a;">Klik untuk memilih atau unggah berkas bukti fisik</strong>
                     <p style="font-size: 10px; color: ${state.settings.googleDriveLink ? '#0284c7' : '#64748b'}; margin-top: 4px; font-weight: 700;">
-                      ${state.settings.googleDriveLink ? `☁️ Penyimpanan Otomatis: Google Drive (${activeUserObj.name})` : 'Format yang didukung: PDF, PNG, JPG, JPEG, WEBP, DOCX'}
+                      ${state.settings.googleDriveLink ? `☁️ Penyimpanan Otomatis: Google Drive (${activeUserObj.name})` : 'Format yang didukung: DOCX, XLSX, PDF, PNG, JPG, JPEG, WEBP, PPTX, TXT'}
                     </p>
                     <input 
                       type="file" 
@@ -4098,19 +4931,51 @@
 
                   ${files.length > 0 ? `
                     <div class="file-grid">
-                      ${files.map(f => `
-                        <div class="file-card" style="${f.isDrive ? 'border: 1px solid #38bdf8; background: #f0f9ff;' : ''}">
-                          <div>
-                            <div class="file-name">${f.isDrive ? '☁️ Google Drive:' : '📄'} ${f.name || f.savedName || 'Dokumen'}</div>
-                            <div class="file-meta">Lokasi: ${f.isDrive ? 'Cloud Storage (Google Drive)' : (f.folder || 'PKKS 2026')} &bull; ${f.size || ''}</div>
-                            <div class="file-meta" style="color:#059669; font-weight:700;">Pengunggah: ${f.user || activeUserObj.name}</div>
+                      ${files.map(f => {
+                        const fExt = (f.name || f.savedName || '').split('.').pop().toLowerCase();
+                        let badgeIcon = '📄';
+                        let badgeBg = '#64748b';
+                        let badgeText = fExt ? fExt.toUpperCase() : 'BERKAS';
+                        if (['docx', 'doc'].includes(fExt)) {
+                          badgeIcon = '📝';
+                          badgeBg = '#0284c7';
+                          badgeText = 'WORD DOCX';
+                        } else if (['xlsx', 'xls', 'csv'].includes(fExt)) {
+                          badgeIcon = '📊';
+                          badgeBg = '#059669';
+                          badgeText = 'EXCEL';
+                        } else if (fExt === 'pdf') {
+                          badgeIcon = '📕';
+                          badgeBg = '#dc2626';
+                          badgeText = 'PDF';
+                        } else if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(fExt)) {
+                          badgeIcon = '🖼️';
+                          badgeBg = '#7c3aed';
+                          badgeText = 'GAMBAR';
+                        } else if (['pptx', 'ppt'].includes(fExt)) {
+                          badgeIcon = '📽️';
+                          badgeBg = '#d97706';
+                          badgeText = 'POWERPOINT';
+                        }
+
+                        return `
+                          <div class="file-card" style="${f.isDrive ? 'border: 1px solid #38bdf8; background: #f0f9ff;' : ''}">
+                            <div>
+                              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
+                                <span style="font-size: 10px; font-weight: 800; color: white; background: ${badgeBg}; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">${badgeIcon} ${badgeText}</span>
+                                ${f.isDrive ? '<span style="font-size: 10px; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 5px;">☁️ GDrive</span>' : ''}
+                              </div>
+                              <div class="file-name" style="font-weight: 800; font-size: 12.5px; color: #0f172a; word-break: break-all;">${f.name || f.savedName || 'Dokumen'}</div>
+                              <div class="file-meta" style="font-size: 11px; color: #64748b; margin-top: 4px;">Lokasi: ${f.isDrive ? 'Cloud Storage (Google Drive)' : (f.folder || 'PKKS 2026')} &bull; ${f.size || ''}</div>
+                              <div class="file-meta" style="color:#059669; font-weight:700; font-size: 11px;">Pengunggah: ${f.user || activeUserObj.name}</div>
+                            </div>
+                            <div class="file-actions" style="margin-top: 10px;">
+                              <button onclick="openFilePreviewById('${item.id}', '${f.id}')" class="btn-xs btn-view">👁️ Previu</button>
+                              <button onclick="removeFile('${item.id}', '${f.id}')" class="btn-xs btn-delete">🗑️ Hapus</button>
+                            </div>
                           </div>
-                          <div class="file-actions">
-                            <button onclick="openFilePreviewById('${item.id}', '${f.id}')" class="btn-xs btn-view">👁️ Previu</button>
-                            <button onclick="removeFile('${item.id}', '${f.id}')" class="btn-xs btn-delete">🗑️ Hapus</button>
-                          </div>
-                        </div>
-                      `).join('')}
+                        `;
+                      }).join('')}
                     </div>
                   ` : ''}
                 </div>
@@ -4394,8 +5259,9 @@
       `;
     }
 
-    // MODAL PREVIEW RENDERER (DIRECT CANVAS IN-PLACE RENDERING ONLY)
+    // MODAL PREVIEW RENDERER (ALL FORMATS IN-APP: DOCX, XLSX, PDF, PPTX, TXT, IMAGES)
     function renderPreviewModal(file) {
+      resolveGdriveFileMeta(file);
       let fileName = file.name || file.savedName || 'Dokumen';
       let rawName = file.savedName || file.name || '';
       const npsn = state.schoolNpsn || '20231556';
@@ -4410,46 +5276,70 @@
       const ext = fileName.split('.').pop().toLowerCase();
       const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
       const isPdf = ext === 'pdf';
+      const isWord = ['docx', 'doc'].includes(ext);
+      const isExcel = ['xlsx', 'xls', 'csv'].includes(ext);
+      const isPpt = ['pptx', 'ppt'].includes(ext);
+      const isText = ['txt', 'log', 'json', 'xml'].includes(ext);
 
-      let isDriveFile = Boolean(file.isDrive && file.url && !file.isBlobUrl && file.url.includes('drive.google.com'));
-      let drivePreviewUrl = '';
-      if (isDriveFile) {
-        if (file.url.includes('/view')) {
-          drivePreviewUrl = file.url.replace(/\/view.*$/, '/preview');
-        } else {
-          drivePreviewUrl = file.url;
-        }
+      let gdriveId = file.gdriveFileId || '';
+      let drivePreviewUrl = file.drivePreviewUrl || (gdriveId ? `https://drive.google.com/file/d/${gdriveId}/preview` : '');
+      if (!drivePreviewUrl && file.url && file.url.includes('drive.google.com')) {
+        drivePreviewUrl = file.url.includes('/view') ? file.url.replace(/\/view.*$/, '/preview') : file.url;
       }
+      const hasDrivePreview = Boolean(drivePreviewUrl);
+      const directDriveViewUrl = gdriveId ? `https://drive.google.com/file/d/${gdriveId}/view` : (file.driveFileUrl || file.driveUrl || '');
+
       const activeFolderId = extractFolderId(file.driveFolderId || (state.settings && state.settings.googleDriveLink) || DEFAULT_GDRIVE_FOLDER_ID) || DEFAULT_GDRIVE_FOLDER_ID;
       const gdriveFolderHref = file.driveUrl || `https://drive.google.com/drive/folders/${activeFolderId}`;
 
       return `
         <div class="modal-overlay" onclick="closePreview()">
-          <div class="modal-content" style="max-width: 950px;" onclick="event.stopPropagation()">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <h3 style="font-size: 14px; font-weight: 800; color: white;">${fileName}</h3>
-                <p style="font-size: 11px; color: #94a3b8;">Pengunggah: <strong>${file.user || 'Umum'}</strong> &bull; Format: <span style="color:#38bdf8; font-weight:700; text-transform:uppercase;">${ext}</span> &bull; Lokasi: <strong style="color:#f59e0b;">Google Drive (${activeFolderId.substring(0, 8)}...)</strong></p>
+          <div class="modal-content" style="max-width: 1000px; position: relative;" onclick="event.stopPropagation()">
+            <!-- HEADER BAR DENGAN TOMBOL KEMBALI PROMINEN -->
+            <div class="modal-header preview-modal-header" style="display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; background: #0f172a; border-bottom: 1px solid #334155; width: 100%; box-sizing: border-box; flex-shrink: 0;">
+              <!-- BARIS 1: TOMBOL KEMBALI (KIRI), BADGE (TENGAH), TOMBOL TUTUP X (KANAN) -->
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                  <button type="button" onclick="closePreview()" class="btn-preview-back" style="display: inline-flex; align-items: center; gap: 6px; background: #dc2626; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(220,38,38,0.4); flex-shrink: 0;">
+                    ⬅️ KEMBALI
+                  </button>
+                  <span style="font-size: 11px; font-weight: 800; color: #ffffff; text-transform: uppercase; background: ${isWord ? '#0284c7' : isExcel ? '#059669' : isPdf ? '#dc2626' : isImage ? '#7c3aed' : '#475569'}; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">
+                    ${isWord ? '📝 DOCX' : isExcel ? '📊 EXCEL' : isPdf ? '📕 PDF' : isImage ? '🖼️ GAMBAR' : isPpt ? '📽️ PPT' : ext.toUpperCase()}
+                  </span>
+                </div>
+                <button type="button" onclick="closePreview()" title="Tutup Previu" style="background: #ef4444; border: 1px solid #f87171; color: white; font-size: 18px; font-weight: 900; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(239,68,68,0.3);">
+                  ✕
+                </button>
               </div>
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #0284c7; width: auto; text-decoration: none;">📂 Buka GDrive</a>
-                ${isDriveFile ? `
-                  <a href="${file.url}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none;">🖨️ Buka & Print di Drive</a>
+
+              <!-- BARIS 2: NAMA BERKAS RAPI (WORD-BREAK) & INFORMASI PENGUNGGAH -->
+              <div style="width: 100%; border-top: 1px solid #1e293b; padding-top: 6px;">
+                <h3 style="font-size: 13px; font-weight: 800; color: #f8fafc; margin: 0 0 2px 0; word-break: break-word; overflow-wrap: break-word; line-height: 1.35;">${fileName}</h3>
+                <p style="font-size: 11px; color: #94a3b8; margin: 0; line-height: 1.3; word-break: break-word;">Pengunggah: <strong style="color: #f1f5f9;">${file.user || 'Umum'}</strong> &bull; Ukuran: <strong>${file.size || '-'}</strong> &bull; Lokasi: <strong style="color: #38bdf8;">Google Drive</strong></p>
+              </div>
+
+              <!-- BARIS 3: TOMBOL AKSI CEPAT (GDRIVE, CETAK, UNDUH) -->
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%; padding-top: 2px;">
+                <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #0284c7; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">📂 Folder GDrive</a>
+                ${directDriveViewUrl ? `
+                  <a href="${directDriveViewUrl}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">🖨️ Buka di Drive</a>
                 ` : isPdf ? `
-                  <a href="${fileApiUrl}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none;">🖨️ Print PDF</a>
+                  <a href="${fileApiUrl}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">🖨️ Print PDF</a>
                 ` : isImage ? `
-                  <button type="button" onclick="printCanvasPreview()" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto;">🖨️ Cetak</button>
+                  <button type="button" onclick="printCanvasPreview()" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; border-radius: 6px; font-weight: 700; white-space: nowrap;">🖨️ Cetak</button>
                 ` : ''}
-                <a href="${isDriveFile ? file.url : downloadUrl}" download="${fileName}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #059669; width: auto; text-decoration: none;">⬇️ Download</a>
-                <button onclick="closePreview()" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0px 8px; margin-left: 8px;">&times;</button>
+                <a href="${directDriveViewUrl || downloadUrl}" download="${fileName}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #059669; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">⬇️ Download</a>
               </div>
             </div>
 
-            <div class="modal-body" style="padding: 0; background: #0f172a;">
-              ${isDriveFile ? `
-                <iframe src="${drivePreviewUrl}" width="100%" height="100%" style="border:none; min-height: 80vh;" allow="autoplay"></iframe>
+            <div class="modal-body" style="padding: 0; background: #0f172a; position: relative;">
+              ${(hasDrivePreview && (isWord || isExcel || isPpt || isText || (isPdf && !file.isBlobUrl))) ? `
+                <div style="width: 100%; height: 80vh; min-height: 80vh; position: relative; background: #0f172a;">
+                  <iframe src="${drivePreviewUrl}" width="100%" height="100%" style="border:none; width: 100%; height: 100%; min-height: 80vh; display: block; background: #ffffff;" allow="autoplay" loading="lazy"></iframe>
+                </div>
               ` : isImage ? `
                 <div style="background: #1e293b; padding: 10px 16px; display: flex; justify-content: center; align-items: center; gap: 8px; border-bottom: 1px solid #334155; flex-wrap: wrap;">
+                  <button type="button" onclick="closePreview()" class="btn-primary" style="width:auto; padding:5px 14px; font-size:11px; background:#dc2626; font-weight:800;">⬅️ Kembali</button>
                   <button type="button" onclick="adjustCanvasZoom(0.25)" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#2563eb;" title="Perbesar (+25%)">🔍 Zoom (+)</button>
                   <button type="button" onclick="adjustCanvasZoom(-0.25)" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#2563eb;" title="Perkecil (-25%)">🔍 Zoom (-)</button>
                   <button type="button" onclick="rotateCanvasImage()" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#4f46e5;" title="Putar 90 Derajat">🔄 Putar (90°)</button>
@@ -4463,14 +5353,34 @@
                 </div>
               ` : isPdf ? `
                 <div id="pdf-canvas-container" style="width: 100%; height: 100%; min-height: 80vh; max-height: 80vh; overflow-y: auto; text-align: center; background: #334155; padding: 20px 0;"></div>
+              ` : isWord ? `
+                <div id="docx-preview-container" style="width: 100%; height: 100%; min-height: 80vh; max-height: 80vh; overflow-y: auto; background: white; padding: 20px; box-sizing: border-box;"></div>
+              ` : isExcel ? `
+                <div id="xlsx-preview-container" style="width: 100%; height: 100%; min-height: 80vh; max-height: 80vh; overflow: auto; background: white; padding: 16px; box-sizing: border-box;"></div>
+              ` : isText ? `
+                <div style="padding: 16px; background: #0f172a; min-height: 80vh; max-height: 80vh; overflow: auto;">
+                  <pre id="text-preview-container" style="background: #1e293b; color: #f8fafc; padding: 16px; border-radius: 8px; font-family: Consolas, monospace; font-size: 12.5px; white-space: pre-wrap; word-break: break-all; margin: 0;"></pre>
+                </div>
               ` : `
-                <div style="text-align: center; color: white; padding: 80px 20px; background: #1e293b;">
-                  <div style="font-size: 64px; margin-bottom: 16px;">📄</div>
-                  <h4 style="font-size: 18px; font-weight: 800; margin-bottom: 8px;">Pratinjau Berkas (${ext.toUpperCase()})</h4>
-                  <p style="font-size: 13px; color: #94a3b8; margin-bottom: 24px;">Format berkas ${fileName} siap diunduh dan dibuka langsung di komputer.</p>
-                  <a href="${downloadUrl}" download="${fileName}" class="btn-primary" style="display:inline-block; width:auto; padding:10px 24px; font-size:13px; background:#059669; text-decoration:none;">⬇️ Unduh Berkas (${file.size || 'Download'})</a>
+                <div style="text-align: center; color: white; padding: 60px 20px 80px; background: #1e293b;">
+                  <div style="font-size: 56px; margin-bottom: 16px;">📄</div>
+                  <h4 style="font-size: 17px; font-weight: 800; margin-bottom: 8px; color: #f8fafc;">Berkas (${ext.toUpperCase()})</h4>
+                  <p style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; word-break: break-all;"><strong>${fileName}</strong></p>
+                  <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 24px;">Format berkas ${ext.toUpperCase()} tersimpan di Google Drive sekolah.</p>
+                  <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+                    <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; width:auto; padding:10px 22px; font-size:13px; background:#0284c7; text-decoration:none; font-weight:800; border-radius:10px;">📂 Buka di Google Drive</a>
+                    <a href="${downloadUrl}" download="${fileName}" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; width:auto; padding:10px 22px; font-size:13px; background:#059669; text-decoration:none; font-weight:800; border-radius:10px;">⬇️ Unduh Berkas</a>
+                    <button type="button" onclick="closePreview()" style="display:inline-flex; align-items:center; gap:6px; background:#dc2626; color:white; border:none; padding:10px 22px; font-size:13px; font-weight:800; border-radius:10px; cursor:pointer;">⬅️ Kembali ke Aplikasi</button>
+                  </div>
                 </div>
               `}
+            </div>
+
+            <!-- TOMBOL KEMBALI MELAYANG KHUSUS HP (STICKY BOTTOM PILL) -->
+            <div class="mobile-preview-sticky-bar no-print" style="position: fixed; bottom: 18px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; z-index: 1000000; pointer-events: none;">
+              <button type="button" onclick="closePreview()" style="pointer-events: auto; background: #dc2626; color: white; border: 2px solid #ffffff; border-radius: 9999px; padding: 12px 28px; font-size: 13px; font-weight: 900; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                ⬅️ KEMBALI KE APLIKASI
+              </button>
             </div>
           </div>
         </div>

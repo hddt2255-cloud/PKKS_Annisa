@@ -35,8 +35,178 @@ def extract_gdrive_folder_id(url_or_id):
         return url_or_id
     return None
 
+INITIAL_GDRIVE_FILES = [
+    {
+        "id": "gd_susanti_20261010021924_abrina",
+        "fileKey": "gd_susanti_20261010021924_abrina",
+        "name": "Susanti, S.Kom, S.Pd_20261010021924_abrina.jpeg",
+        "savedName": "Susanti, S.Kom, S.Pd_20261010021924_abrina.jpeg",
+        "originalName": "abrina.jpeg",
+        "user": "Susanti, S.Kom, S.Pd",
+        "userId": "susanti",
+        "itemId": "1.1",
+        "size": "128.5 KB",
+        "mimeType": "image/jpeg",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791598764000
+    },
+    {
+        "id": "gd_susanti_20261009072938_file",
+        "fileKey": "gd_susanti_20261009072938_file",
+        "name": "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png",
+        "savedName": "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png",
+        "originalName": "file_000000009d4881fa848358445b2691d7.png",
+        "user": "Susanti, S.Kom, S.Pd",
+        "userId": "susanti",
+        "itemId": "1.1",
+        "size": "185.2 KB",
+        "mimeType": "image/png",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791530978000
+    },
+    {
+        "id": "gd_susanti_20261009055930_wa0011",
+        "fileKey": "gd_susanti_20261009055930_wa0011",
+        "name": "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg",
+        "savedName": "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg",
+        "originalName": "IMG-20261009-WA0011.jpg",
+        "user": "Susanti, S.Kom, S.Pd",
+        "userId": "susanti",
+        "itemId": "1.1",
+        "size": "142.8 KB",
+        "mimeType": "image/jpeg",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791525570000
+    },
+    {
+        "id": "gd_esthy_20261009074330_jpg",
+        "fileKey": "gd_esthy_20261009074330_jpg",
+        "name": "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg",
+        "savedName": "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg",
+        "originalName": "17915318036342817169655685016059.jpg",
+        "user": "N. Esthy Ening S., S.Sos",
+        "userId": "esthy_ening",
+        "itemId": "1.1",
+        "size": "215.6 KB",
+        "mimeType": "image/jpeg",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791531810000
+    },
+    {
+        "id": "gd_esthy_20261009074317_jpg",
+        "fileKey": "gd_esthy_20261009074317_jpg",
+        "name": "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg",
+        "savedName": "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg",
+        "originalName": "17915317903917935861297302460581.jpg",
+        "user": "N. Esthy Ening S., S.Sos",
+        "userId": "esthy_ening",
+        "itemId": "1.1",
+        "size": "198.4 KB",
+        "mimeType": "image/jpeg",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791531797000
+    },
+    {
+        "id": "gd_esthy_20261009043538_ksp",
+        "fileKey": "gd_esthy_20261009043538_ksp",
+        "name": "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx",
+        "savedName": "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx",
+        "originalName": "KSP_SDIT_ANNISA_2026-2027__1_.docx",
+        "user": "N. Esthy Ening S., S.Sos",
+        "userId": "esthy_ening",
+        "itemId": "1.2",
+        "size": "342.1 KB",
+        "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791520538000
+    },
+    {
+        "id": "gd_esthy_20261009043136_rpm_pancasila",
+        "fileKey": "gd_esthy_20261009043136_rpm_pancasila",
+        "name": "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx",
+        "savedName": "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx",
+        "originalName": "RPM_PEND._PANCASILA__BAB_1_.docx",
+        "user": "N. Esthy Ening S., S.Sos",
+        "userId": "esthy_ening",
+        "itemId": "1.1",
+        "size": "285.3 KB",
+        "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791520296000
+    },
+    {
+        "id": "gd_esthy_20261009043109_rpm_bindo_bab1",
+        "fileKey": "gd_esthy_20261009043109_rpm_bindo_bab1",
+        "name": "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx",
+        "savedName": "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx",
+        "originalName": "RPM_B._INDO__BAB_1_.docx",
+        "user": "N. Esthy Ening S., S.Sos",
+        "userId": "esthy_ening",
+        "itemId": "1.1",
+        "size": "291.8 KB",
+        "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791520269000
+    },
+    {
+        "id": "gd_esthy_20261009042605_rpm_bindo_bab3",
+        "fileKey": "gd_esthy_20261009042605_rpm_bindo_bab3",
+        "name": "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx",
+        "savedName": "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx",
+        "originalName": "RPM_B._INDO__BAB_3_.docx",
+        "user": "N. Esthy Ening S., S.Sos",
+        "userId": "esthy_ening",
+        "itemId": "1.1",
+        "size": "268.4 KB",
+        "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "folder": "Google Drive",
+        "driveFolderId": DEFAULT_GDRIVE_FOLDER_ID,
+        "driveUrl": f"https://drive.google.com/drive/folders/{DEFAULT_GDRIVE_FOLDER_ID}",
+        "isDrive": True,
+        "isFirebaseBridge": True,
+        "timestamp": 1791519965000
+    }
+]
+
 def detect_item_code_from_filename(filename):
     if not filename:
+        return '1.1'
+    fn = str(filename).upper()
+    if 'KSP' in fn or 'KURIKULUM' in fn:
+        return '1.2'
+    if any(k in fn for k in ['RPM', 'RPP', 'MODUL', 'PROTA', 'PROMES', 'ATP']):
         return '1.1'
     m = re.search(r'(?:^|[_\-\s\[(])([1-8]\.[1-9]|6\.1[0-5]|3\.[1-8]|4\.[1-5]|5\.[1-4]|7\.[1-3]|8\.[1-3])(?:[_\-\s\])]|$)', str(filename))
     if m:
@@ -185,6 +355,20 @@ def bg_delete(filename, apps_script_url, folder_id="", file_id="", npsn="2023155
                     urllib.request.urlopen(req, timeout=30)
                 except Exception:
                     pass
+
+        # 3. Simpan tombstone ke pkks_deleted_files di Firebase
+        for k in keys_to_delete:
+            try:
+                tomb_data = json.dumps({'key': k, 'name': filename or k, 'deletedAt': int(__import__('time').time() * 1000)}).encode('utf-8')
+                req_tomb = urllib.request.Request(
+                    f"{base_url}/pkks_deleted_files/{safe_npsn}/{k}.json",
+                    data=tomb_data,
+                    method='PUT'
+                )
+                req_tomb.add_header('Content-Type', 'application/json')
+                urllib.request.urlopen(req_tomb, timeout=30)
+            except Exception:
+                pass
 
         print(f"Background delete from Google Drive & Firebase bridge successful for {filename}")
     except Exception as e:
@@ -508,6 +692,13 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                     'gif': 'image/gif',
                     'svg': 'image/svg+xml',
                     'pdf': 'application/pdf',
+                    'doc': 'application/msword',
+                    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'xls': 'application/vnd.ms-excel',
+                    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'ppt': 'application/vnd.ms-powerpoint',
+                    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                    'csv': 'text/csv; charset=utf-8',
                     'txt': 'text/plain; charset=utf-8',
                     'json': 'application/json; charset=utf-8'
                 }
@@ -661,6 +852,14 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 combined_scores['1.1']['uploadedFiles'] = []
                             combined_scores['1.1']['uploadedFiles'].append(new_file_obj)
 
+                # Otomatis masukkan berkas Google Drive ke combined_scores (Admin / Gabungan)
+                for init_file in INITIAL_GDRIVE_FILES:
+                    i_item = init_file.get('itemId') or detect_item_code_from_filename(init_file.get('savedName') or init_file.get('name')) or '1.1'
+                    if i_item not in combined_scores:
+                        combined_scores[i_item] = {"skor": 0, "catatan": "", "uploadedFiles": []}
+                    if not any(f.get('id') == init_file.get('id') or (f.get('savedName') and f.get('savedName') == init_file.get('savedName')) for f in combined_scores[i_item]['uploadedFiles']):
+                        combined_scores[i_item]['uploadedFiles'].append(dict(init_file))
+
                 data = {
                     "user": user_id,
                     "profile": {
@@ -764,6 +963,17 @@ class PKKSRequestHandler(http.server.SimpleHTTPRequestHandler):
                         if 'uploadedFiles' not in data['scores'][target_item_id]:
                             data['scores'][target_item_id]['uploadedFiles'] = []
                         data['scores'][target_item_id]['uploadedFiles'].append(new_file_obj)
+
+            # Otomatis masukkan INITIAL_GDRIVE_FILES yang sesuai dengan user ini
+            for init_file in INITIAL_GDRIVE_FILES:
+                if is_user_file_match(init_file, user_id, user_name, users):
+                    i_item = init_file.get('itemId') or detect_item_code_from_filename(init_file.get('savedName') or init_file.get('name')) or '1.1'
+                    if i_item not in data['scores']:
+                        data['scores'][i_item] = {"skor": 0, "catatan": "", "uploadedFiles": []}
+                    if 'uploadedFiles' not in data['scores'][i_item]:
+                        data['scores'][i_item]['uploadedFiles'] = []
+                    if not any(f.get('id') == init_file.get('id') or (f.get('savedName') and f.get('savedName') == init_file.get('savedName')) for f in data['scores'][i_item]['uploadedFiles']):
+                        data['scores'][i_item]['uploadedFiles'].append(dict(init_file))
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
