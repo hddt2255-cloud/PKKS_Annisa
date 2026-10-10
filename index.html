@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -410,204 +410,8 @@
       return file;
     }
 
-    // INVENTORY OTOMATIS BERKAS GOOGLE DRIVE FOLDER 1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x (SDIT ANNISA)
-    // Tampil otomatis di HP / perangkat manapun tanpa klik manual!
-    const INITIAL_GDRIVE_FILES = [
-      {
-        id: "gd_susanti_20261010021924_abrina",
-        fileKey: "gd_susanti_20261010021924_abrina",
-        name: "Susanti, S.Kom, S.Pd_20261010021924_abrina.jpeg",
-        savedName: "Susanti, S.Kom, S.Pd_20261010021924_abrina.jpeg",
-        originalName: "abrina.jpeg",
-        user: "Susanti, S.Kom, S.Pd",
-        userId: "susanti",
-        itemId: "1.1",
-        size: "128.5 KB",
-        mimeType: "image/jpeg",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791598764000
-      },
-      {
-        id: "gd_susanti_20261009072938_file",
-        fileKey: "gd_susanti_20261009072938_file",
-        name: "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png",
-        savedName: "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png",
-        originalName: "file_000000009d4881fa848358445b2691d7.png",
-        user: "Susanti, S.Kom, S.Pd",
-        userId: "susanti",
-        itemId: "1.1",
-        size: "2436.4 KB",
-        mimeType: "image/png",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN",
-        driveFileUrl: "https://drive.google.com/file/d/12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN/preview",
-        url: "https://drive.google.com/file/d/12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791530978000
-      },
-      {
-        id: "gd_susanti_20261009055930_wa0011",
-        fileKey: "gd_susanti_20261009055930_wa0011",
-        name: "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg",
-        savedName: "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg",
-        originalName: "IMG-20261009-WA0011.jpg",
-        user: "Susanti, S.Kom, S.Pd",
-        userId: "susanti",
-        itemId: "1.1",
-        size: "142.8 KB",
-        mimeType: "image/jpeg",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2",
-        driveFileUrl: "https://drive.google.com/file/d/1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2/preview",
-        url: "https://drive.google.com/file/d/1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791525570000
-      },
-      {
-        id: "gd_esthy_20261009074330_jpg",
-        fileKey: "gd_esthy_20261009074330_jpg",
-        name: "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg",
-        savedName: "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg",
-        originalName: "17915318036342817169655685016059.jpg",
-        user: "N. Esthy Ening S., S.Sos",
-        userId: "esthy_ening",
-        itemId: "1.1",
-        size: "4659.6 KB",
-        mimeType: "image/jpeg",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "1Gi0ofc3376p-kRR9BByeVhZKlabM-gja",
-        driveFileUrl: "https://drive.google.com/file/d/1Gi0ofc3376p-kRR9BByeVhZKlabM-gja/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/1Gi0ofc3376p-kRR9BByeVhZKlabM-gja/preview",
-        url: "https://drive.google.com/file/d/1Gi0ofc3376p-kRR9BByeVhZKlabM-gja/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791531810000
-      },
-      {
-        id: "gd_esthy_20261009074317_jpg",
-        fileKey: "gd_esthy_20261009074317_jpg",
-        name: "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg",
-        savedName: "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg",
-        originalName: "17915317903917935861297302460581.jpg",
-        user: "N. Esthy Ening S., S.Sos",
-        userId: "esthy_ening",
-        itemId: "1.1",
-        size: "4546.2 KB",
-        mimeType: "image/jpeg",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3",
-        driveFileUrl: "https://drive.google.com/file/d/1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3/preview",
-        url: "https://drive.google.com/file/d/1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791531797000
-      },
-      {
-        id: "gd_esthy_20261009043538_ksp",
-        fileKey: "gd_esthy_20261009043538_ksp",
-        name: "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx",
-        savedName: "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx",
-        originalName: "KSP_SDIT_ANNISA_2026-2027__1_.docx",
-        user: "N. Esthy Ening S., S.Sos",
-        userId: "esthy_ening",
-        itemId: "1.2",
-        size: "342.1 KB",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G",
-        driveFileUrl: "https://drive.google.com/file/d/1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G/preview",
-        url: "https://drive.google.com/file/d/1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791520538000
-      },
-      {
-        id: "gd_esthy_20261009043136_rpm_pancasila",
-        fileKey: "gd_esthy_20261009043136_rpm_pancasila",
-        name: "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx",
-        savedName: "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx",
-        originalName: "RPM_PEND._PANCASILA__BAB_1_.docx",
-        user: "N. Esthy Ening S., S.Sos",
-        userId: "esthy_ening",
-        itemId: "1.1",
-        size: "285.3 KB",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh",
-        driveFileUrl: "https://drive.google.com/file/d/1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh/preview",
-        url: "https://drive.google.com/file/d/1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791520296000
-      },
-      {
-        id: "gd_esthy_20261009043109_rpm_bindo_bab1",
-        fileKey: "gd_esthy_20261009043109_rpm_bindo_bab1",
-        name: "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx",
-        savedName: "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx",
-        originalName: "RPM_B._INDO__BAB_1_.docx",
-        user: "N. Esthy Ening S., S.Sos",
-        userId: "esthy_ening",
-        itemId: "1.1",
-        size: "291.8 KB",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV",
-        driveFileUrl: "https://drive.google.com/file/d/1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV/preview",
-        url: "https://drive.google.com/file/d/1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791520269000
-      },
-      {
-        id: "gd_esthy_20261009042605_rpm_bindo_bab3",
-        fileKey: "gd_esthy_20261009042605_rpm_bindo_bab3",
-        name: "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx",
-        savedName: "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx",
-        originalName: "RPM_B._INDO__BAB_3_.docx",
-        user: "N. Esthy Ening S., S.Sos",
-        userId: "esthy_ening",
-        itemId: "1.1",
-        size: "268.4 KB",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        folder: "Google Drive",
-        driveFolderId: DEFAULT_GDRIVE_FOLDER_ID,
-        driveUrl: `https://drive.google.com/drive/folders/${DEFAULT_GDRIVE_FOLDER_ID}`,
-        gdriveFileId: "1LlgvlayZidicpA3tS025wn3jyOzIn-wB",
-        driveFileUrl: "https://drive.google.com/file/d/1LlgvlayZidicpA3tS025wn3jyOzIn-wB/view",
-        drivePreviewUrl: "https://drive.google.com/file/d/1LlgvlayZidicpA3tS025wn3jyOzIn-wB/preview",
-        url: "https://drive.google.com/file/d/1LlgvlayZidicpA3tS025wn3jyOzIn-wB/preview",
-        isDrive: true,
-        isFirebaseBridge: true,
-        timestamp: 1791519965000
-      }
-    ];
+    // INVENTORY BERKAS CLOUD - Tersinkronkan murni & realtime dari Firebase Database
+    const INITIAL_GDRIVE_FILES = [];
 
     function normalizeFirebaseUrl(url) {
       let u = String(url || PERMANENT_APPS_SCRIPT_URL || '').trim();
@@ -712,11 +516,7 @@
     }
 
     function getDeletedFilesSet(npsn) {
-      npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
-      try {
-        const raw = localStorage.getItem('pkks_deleted_files_' + npsn);
-        if (raw) return new Set(JSON.parse(raw));
-      } catch(e) {}
+      // Tombstones permanently disabled: Firebase Cloud /pkks_file_meta is the sole source of truth!
       return new Set();
     }
 
@@ -727,18 +527,6 @@
         const raw = localStorage.getItem('pkks_uploaded_files_meta_' + npsn);
         if (raw) map = JSON.parse(raw) || {};
       } catch(e) {}
-
-      // Otomatis sinkronkan 9 berkas Google Drive SDIT ANNISA (20231556) ke semua browser & HP
-      if (npsn === '20231556') {
-        const delSet = getDeletedFilesSet(npsn);
-        INITIAL_GDRIVE_FILES.forEach(initFile => {
-          if (!delSet.has(initFile.id) && !delSet.has(initFile.savedName) && !delSet.has(initFile.name)) {
-            if (!map[initFile.id]) {
-              map[initFile.id] = Object.assign({}, initFile);
-            }
-          }
-        });
-      }
       return map;
     }
 
@@ -749,19 +537,8 @@
       try {
         const map = getLocalFileMetaMap(npsn);
         map[metaObj.id] = metaObj;
+        if (metaObj.fileKey) map[metaObj.fileKey] = metaObj;
         localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(map));
-
-        const delSet = getDeletedFilesSet(npsn);
-        let delChanged = false;
-        [metaObj.id, metaObj.fileKey, metaObj.savedName, metaObj.name].forEach(k => {
-          if (k && delSet.has(k)) {
-            delSet.delete(k);
-            delChanged = true;
-          }
-        });
-        if (delChanged) {
-          localStorage.setItem('pkks_deleted_files_' + npsn, JSON.stringify(Array.from(delSet)));
-        }
       } catch(e) {}
     }
 
@@ -770,13 +547,6 @@
       const validKeys = (keysToRemove || []).filter(Boolean);
       if (validKeys.length === 0) return;
       try {
-        const delSet = getDeletedFilesSet(npsn);
-        validKeys.forEach(k => {
-          delSet.add(k);
-          delSet.add(toFirebaseKey(k));
-        });
-        localStorage.setItem('pkks_deleted_files_' + npsn, JSON.stringify(Array.from(delSet)));
-
         const map = getLocalFileMetaMap(npsn);
         Object.keys(map).forEach(fid => {
           const m = map[fid];
@@ -832,21 +602,6 @@
             try { renderScores(); } catch(e) {}
           }
         }
-
-        // Asynchronously broadcast deletion tombstones to Firebase Realtime Database
-        try {
-          const s = getSchoolSettings(npsn);
-          const baseUrl = normalizeFirebaseUrl(s.appsScriptUrl);
-          const safeNpsn = toFirebaseKey(npsn);
-          validKeys.forEach(k => {
-            const safeK = toFirebaseKey(k);
-            originalFetch(`${baseUrl}/pkks_deleted_files/${safeNpsn}/${safeK}.json`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ key: safeK, name: k, deletedAt: Date.now() })
-            }).catch(() => {});
-          });
-        } catch(e) {}
       } catch(e) {}
     }
 
@@ -1122,24 +877,7 @@
           );
         });
 
-        // 3. Write permanent tombstones to /pkks_deleted_files in Firebase
-        const tombstoneObj = {
-          name: filename || origName || '',
-          deletedAt: Date.now(),
-          deletedBy: ownerUserId || (window.state && window.state.currentUser ? window.state.currentUser.id : 'admin')
-        };
-        const allTombKeys = new Set([...Array.from(keysToDelete), toFirebaseKey(filename), toFirebaseKey(origName), toFirebaseKey(fileId), toFirebaseKey(fileKey)].filter(Boolean));
-        allTombKeys.forEach(tKey => {
-          delPromises.push(
-            originalFetch(`${baseUrl}/pkks_deleted_files/${safeNpsn}/${tKey}.json`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(Object.assign({ key: tKey }, tombstoneObj))
-            })
-          );
-        });
-
-        // 4. Also clean from Firebase /pkks_data/${safeNpsn}/all.json and user json
+        // 3. Also clean from Firebase /pkks_data/${safeNpsn}/all.json and user json
         const cleanScoreFirebase = async (targetUser) => {
           try {
             const dataRes = await originalFetch(`${baseUrl}/pkks_data/${safeNpsn}/${targetUser}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
@@ -1255,59 +993,22 @@
         const s = getSchoolSettings(npsn);
         const baseUrl = normalizeFirebaseUrl(s.appsScriptUrl);
         const safeNpsn = toFirebaseKey(npsn);
-        const delSet = getDeletedFilesSet(npsn);
         const activeFolderId = extractFolderId(s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID);
         const driveFolderUrl = `https://drive.google.com/drive/folders/${activeFolderId}`;
 
-        // Multi-source cloud fetching:
-        // 1. Deleted files tombstones (/pkks_deleted_files) - guarantees realtime deletion across devices!
-        // 2. New metadata bridge records (/pkks_file_meta)
-        // 3. Legacy / previous uploaded records (/pkks_files)
-        // 4. Complete school user scores & data (/pkks_data)
-        // 5. Remote school settings (/pkks_settings)
-        const deletedPromise = originalFetch(`${baseUrl}/pkks_deleted_files/${safeNpsn}.json`)
-          .then(r => r.ok ? r.json() : null).catch(() => null);
+        // 1. Fetch cloud records in parallel
         const metaPromise = originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}.json`)
-          .then(r => r.ok ? r.json() : null).catch(() => null);
-        const legacyFilesPromise = originalFetch(`${baseUrl}/pkks_files/${safeNpsn}.json`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
         const dataPromise = originalFetch(`${baseUrl}/pkks_data/${safeNpsn}.json`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
         const settingsPromise = originalFetch(`${baseUrl}/pkks_settings/${safeNpsn}.json`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
 
-        // Also query Google Drive file list if supported
-        let gdriveFilesPromise = Promise.resolve(null);
-        if (DEFAULT_GDRIVE_EXEC_URL && activeFolderId) {
-          gdriveFilesPromise = originalFetch(`${DEFAULT_GDRIVE_EXEC_URL}?action=list&folderId=${activeFolderId}`)
-            .then(r => r.ok ? r.json() : null)
-            .catch(() => null);
-        }
-
-        const [remoteDelMap, remoteMetaMap, legacyFilesMap, remoteDataRes, remoteSettings, gdriveListRes] = await Promise.allSettled([
-          deletedPromise,
+        const [remoteMetaMap, remoteDataRes, remoteSettings] = await Promise.allSettled([
           metaPromise,
-          legacyFilesPromise,
           dataPromise,
-          settingsPromise,
-          gdriveFilesPromise
+          settingsPromise
         ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
-
-        // Merge remote deleted files into delSet
-        if (remoteDelMap && typeof remoteDelMap === 'object' && !remoteDelMap.error) {
-          let delChanged = false;
-          Object.keys(remoteDelMap).forEach(dk => {
-            const dVal = remoteDelMap[dk];
-            if (dk && !delSet.has(dk)) { delSet.add(dk); delChanged = true; }
-            if (dVal && typeof dVal === 'object') {
-              if (dVal.name && !delSet.has(dVal.name)) { delSet.add(dVal.name); delChanged = true; }
-              if (dVal.key && !delSet.has(dVal.key)) { delSet.add(dVal.key); delChanged = true; }
-            }
-          });
-          if (delChanged) {
-            localStorage.setItem('pkks_deleted_files_' + npsn, JSON.stringify(Array.from(delSet)));
-          }
-        }
 
         // Sync settings if available from cloud
         if (remoteSettings && typeof remoteSettings === 'object' && !remoteSettings.error) {
@@ -1323,248 +1024,151 @@
           }
         }
 
-        const localMap = getLocalFileMetaMap(npsn);
-        let metaUpdated = false;
-
-        // ACTIVELY PURGE ALL DELETED FILES FROM localMap
-        Object.keys(localMap).forEach(fid => {
-          const m = localMap[fid];
-          if (delSet.has(fid) || delSet.has(toFirebaseKey(fid)) || (m && (delSet.has(m.id) || delSet.has(m.fileKey) || delSet.has(m.savedName) || delSet.has(m.name) || delSet.has(toFirebaseKey(m.savedName || '')) || delSet.has(toFirebaseKey(m.name || ''))))) {
-            delete localMap[fid];
-            metaUpdated = true;
-            try { PkksFileDB.delete(fid); } catch(e) {}
-            if (m && m.savedName) { try { PkksFileDB.delete(m.savedName); } catch(e) {} }
-          }
-        });
-
-        // ACTIVELY PURGE ALL DELETED FILES FROM window.state.scores (Realtime UI update!)
-        if (window.state && window.state.scores) {
-          let scoreCleaned = false;
-          Object.keys(window.state.scores).forEach(itemId => {
-            const sc = window.state.scores[itemId];
-            if (sc && Array.isArray(sc.uploadedFiles)) {
-              const before = sc.uploadedFiles.length;
-              sc.uploadedFiles = sc.uploadedFiles.filter(f => {
-                const fId = f.id || f.fileKey || '';
-                const fName = f.savedName || f.name || '';
-                const isDel = delSet.has(fId) || delSet.has(toFirebaseKey(fId)) || delSet.has(fName) || delSet.has(toFirebaseKey(fName));
-                return !isDel;
-              });
-              if (sc.uploadedFiles.length !== before) scoreCleaned = true;
-            }
-          });
-          if (scoreCleaned) {
-            try { renderScores(); } catch(e) {}
-          }
-        }
-
-        const isFileDeleted = (fId, sName, oName) => {
-          return delSet.has(fId) || delSet.has(toFirebaseKey(fId)) ||
-                 delSet.has(sName) || delSet.has(toFirebaseKey(sName)) ||
-                 delSet.has(oName) || delSet.has(toFirebaseKey(oName));
-        };
-
-        const registerCloudFile = (fileObj) => {
-          if (!fileObj || typeof fileObj !== 'object') return;
-          const fId = fileObj.id || fileObj.fileKey || ('f_' + Math.random().toString(36).substr(2, 8));
-          const sName = fileObj.savedName || fileObj.name || fId;
-          const oName = fileObj.originalName || fileObj.name || sName;
-
-          if (isFileDeleted(fId, sName, oName)) return;
-          if (sName.startsWith('logo_sekolah_') || oName.startsWith('logo_sekolah_')) return;
-
-          const fItemId = fileObj.itemId || detectItemCodeFromFileName(sName) || '1.1';
-          const fFolderId = extractFolderId(fileObj.driveFolderId || activeFolderId);
-          const fDriveUrl = fileObj.driveUrl || `https://drive.google.com/drive/folders/${fFolderId}`;
-
-          const cleanFile = {
-            id: fId,
-            fileKey: fId,
-            itemId: fItemId,
-            name: sName,
-            savedName: sName,
-            originalName: oName,
-            mimeType: fileObj.mimeType || 'application/octet-stream',
-            size: fileObj.size || '100 KB',
-            user: fileObj.user || fileObj.username || 'Pengunggah',
-            userId: fileObj.userId || 'admin',
-            npsn: npsn,
-            folder: 'Google Drive',
-            driveFolderId: fFolderId,
-            driveUrl: fDriveUrl,
-            gdriveFileId: fileObj.gdriveFileId || '',
-            driveFileUrl: fileObj.driveFileUrl || '',
-            drivePreviewUrl: fileObj.drivePreviewUrl || '',
-            previewUrl: fileObj.previewUrl || fileObj.thumbnail || '',
-            url: fileObj.previewUrl || fileObj.drivePreviewUrl || (fileObj.url && !fileObj.url.startsWith('data:') ? fileObj.url : ''),
-            isDrive: true,
-            isFirebaseBridge: true,
-            timestamp: fileObj.timestamp || Date.now()
-          };
-
-          resolveGdriveFileMeta(cleanFile);
-
-          if (cleanFile.previewUrl && cleanFile.previewUrl.startsWith('data:')) {
-            const pBlob = dataUrlToBlob(cleanFile.previewUrl);
-            if (pBlob) {
-              PkksFileDB.set(cleanFile.id, pBlob);
-              PkksFileDB.set(cleanFile.savedName, pBlob);
-            }
-          }
-
-          if (!localMap[fId]) {
-            localMap[fId] = cleanFile;
-            metaUpdated = true;
-          } else {
-            Object.assign(localMap[fId], cleanFile);
-          }
-        };
-
-        // 0. Otomatis daftarkan berkas awal Google Drive SDIT ANNISA
-        if (npsn === '20231556') {
-          INITIAL_GDRIVE_FILES.forEach(initFile => {
-            if (!isFileDeleted(initFile.id, initFile.savedName, initFile.name)) {
-              registerCloudFile(initFile);
-            }
-          });
-        }
-
-        // 1. Process Google Drive listed files
-        let driveItems = [];
-        if (Array.isArray(gdriveListRes)) {
-          driveItems = gdriveListRes;
-        } else if (gdriveListRes && Array.isArray(gdriveListRes.files)) {
-          driveItems = gdriveListRes.files;
-        }
-        const currentUsers = (window.state && window.state.userList) || DEFAULT_USERS;
-        driveItems.forEach(df => {
-          if (!df) return;
-          const dName = df.name || df.filename || df.title || '';
-          if (!dName || dName.startsWith('logo_sekolah_')) return;
-          if (isFileDeleted(df.id || '', dName, dName)) return;
-
-          let deducedUser = 'Pengunggah';
-          let deducedUserId = 'admin';
-          for (const u of currentUsers) {
-            if (isUserFileMatch({ savedName: dName, name: dName }, u.id, u.name, currentUsers)) {
-              deducedUser = u.name;
-              deducedUserId = u.id;
-              break;
-            }
-          }
-
-          registerCloudFile({
-            id: df.id || ('gd_' + dName),
-            name: dName,
-            savedName: dName,
-            originalName: dName,
-            size: df.size ? (typeof df.size === 'number' ? `${(df.size/1024).toFixed(1)} KB` : String(df.size)) : '100 KB',
-            mimeType: df.mimeType || 'application/octet-stream',
-            user: deducedUser,
-            userId: deducedUserId,
-            url: df.webViewLink || df.url || '',
-            driveFolderId: activeFolderId,
-            driveUrl: driveFolderUrl
-          });
-        });
-
-        // 2. Process Firebase pkks_file_meta
+        // 2. Authoritative Cloud Files: /pkks_file_meta is the ONLY source of truth!
+        // If remoteMetaMap is null or empty, it means all files have been deleted from cloud
+        const validCloudFiles = [];
         if (remoteMetaMap && typeof remoteMetaMap === 'object' && !remoteMetaMap.error) {
           Object.keys(remoteMetaMap).forEach(k => {
             const m = remoteMetaMap[k];
-            if (m && !isFileDeleted(k, m.savedName || m.name || '', m.originalName || '')) {
-              registerCloudFile(m);
-            }
+            if (!m || typeof m !== 'object') return;
+            const fName = m.savedName || m.name || '';
+            if (!fName || fName.startsWith('logo_sekolah_')) return;
+
+            const fId = m.id || m.fileKey || k;
+            const fItemId = m.itemId || detectItemCodeFromFileName(fName) || '1.1';
+            const fFolderId = extractFolderId(m.driveFolderId || activeFolderId);
+            const fDriveUrl = m.driveUrl || `https://drive.google.com/drive/folders/${fFolderId}`;
+
+            const cleanFile = {
+              id: fId,
+              fileKey: fId,
+              itemId: fItemId,
+              name: fName,
+              savedName: fName,
+              originalName: m.originalName || m.name || fName,
+              mimeType: m.mimeType || 'application/octet-stream',
+              size: m.size || '100 KB',
+              user: m.user || m.username || 'Pengunggah',
+              userId: m.userId || 'admin',
+              npsn: npsn,
+              folder: 'Google Drive',
+              driveFolderId: fFolderId,
+              driveUrl: fDriveUrl,
+              gdriveFileId: m.gdriveFileId || '',
+              driveFileUrl: m.driveFileUrl || '',
+              drivePreviewUrl: m.drivePreviewUrl || '',
+              previewUrl: m.previewUrl || m.thumbnail || '',
+              url: m.previewUrl || m.drivePreviewUrl || (m.url && !m.url.startsWith('data:') ? m.url : ''),
+              isDrive: true,
+              isFirebaseBridge: true,
+              timestamp: m.timestamp || Date.now()
+            };
+            resolveGdriveFileMeta(cleanFile);
+            validCloudFiles.push(cleanFile);
           });
         }
 
-        // 3. Process Firebase legacy pkks_files
-        if (legacyFilesMap && typeof legacyFilesMap === 'object' && !legacyFilesMap.error) {
-          Object.keys(legacyFilesMap).forEach(k => {
-            const m = legacyFilesMap[k];
-            if (m && !isFileDeleted(k, m.savedName || m.name || '', m.originalName || '')) {
-              const fileCopy = Object.assign({}, m);
-              if (fileCopy.dataUrl) delete fileCopy.dataUrl;
-              registerCloudFile(fileCopy);
-            }
-          });
-        }
+        // 3. Mirror authoritative cloud file list to local storage
+        // Overwrite localStorage['pkks_uploaded_files_meta_' + npsn] so stale deleted files NEVER resurrect!
+        const cleanCloudMap = {};
+        validCloudFiles.forEach(f => {
+          cleanCloudMap[f.id] = f;
+          if (f.fileKey) cleanCloudMap[f.fileKey] = f;
+        });
+        localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(cleanCloudMap));
+        // Remove any stale tombstones so newly uploaded files are never ghost-blocked
+        localStorage.removeItem('pkks_deleted_files_' + npsn);
 
-        // 4. Process all users' records from Firebase pkks_data
-        const mergeUserRecord = (targetUid, recordObj) => {
-          if (!recordObj || !recordObj.payloadJson || targetUid === 'all' || targetUid === 'semua') return;
-          try {
-            const remoteUserData = JSON.parse(recordObj.payloadJson);
-            if (!remoteUserData || typeof remoteUserData !== 'object') return;
-            const localKey = `pkks_data_${npsn}_${targetUid}`;
-            let localUserData = null;
+        // 4. Clean local user records & reconcile with validCloudFiles
+        if (remoteDataRes && typeof remoteDataRes === 'object' && !remoteDataRes.error) {
+          Object.keys(remoteDataRes).forEach(uKey => {
+            const rec = remoteDataRes[uKey];
+            if (!rec || !rec.payloadJson) return;
+            const targetUid = rec.user || uKey;
             try {
-              const raw = localStorage.getItem(localKey);
-              if (raw) localUserData = JSON.parse(raw);
-            } catch(e) {}
-
-            if (!localUserData) {
-              localUserData = remoteUserData;
-            }
-
-            if (!localUserData.scores) localUserData.scores = {};
-            const rScores = remoteUserData.scores || {};
-            Object.keys(rScores).forEach(itemId => {
-              const rItem = rScores[itemId];
-              if (!rItem || typeof rItem !== 'object') return;
-              if (!localUserData.scores[itemId]) {
-                localUserData.scores[itemId] = { skor: 0, catatan: '', uploadedFiles: [] };
+              const uData = JSON.parse(rec.payloadJson);
+              if (uData && uData.scores) {
+                Object.keys(uData.scores).forEach(code => {
+                  const itm = uData.scores[code];
+                  if (itm && Array.isArray(itm.uploadedFiles)) {
+                    itm.uploadedFiles = itm.uploadedFiles.filter(uf => {
+                      return validCloudFiles.some(cf => cf.id === uf.id || (cf.savedName && (cf.savedName === uf.savedName || cf.savedName === uf.name)));
+                    });
+                  }
+                });
               }
-              const lItem = localUserData.scores[itemId];
-              if (!lItem.skor && rItem.skor) lItem.skor = rItem.skor;
-              if (!lItem.catatan && rItem.catatan) lItem.catatan = rItem.catatan;
-              if (!Array.isArray(lItem.uploadedFiles)) lItem.uploadedFiles = [];
+              localStorage.setItem(`pkks_data_${npsn}_${targetUid}`, JSON.stringify(uData));
+            } catch(e) {}
+          });
+        }
 
-              // Clean local files matching deletion
-              lItem.uploadedFiles = lItem.uploadedFiles.filter(f => !isFileDeleted(f.id, f.savedName, f.name));
+        // 5. Update LIVE UI STATE (window.state.scores) INSTANTLY on Phone and PC
+        if (window.state && window.state.scores) {
+          const curTargetUser = window.state.activeDataUserId || (window.state.currentUser ? window.state.currentUser.id : 'all');
+          const isAll = (curTargetUser === 'all' || curTargetUser === 'semua' || curTargetUser === 'admin');
+          const currentUsers = window.state.userList || DEFAULT_USERS;
+          const curUserObj = currentUsers.find(u => u.id === curTargetUser);
+          const curUserName = curUserObj ? curUserObj.name : curTargetUser;
 
-              (rItem.uploadedFiles || []).forEach(rf => {
-                if (!rf || isFileDeleted(rf.id, rf.savedName, rf.name)) return;
-                registerCloudFile(Object.assign({ itemId: itemId, userId: targetUid }, rf));
-                if (!lItem.uploadedFiles.some(lf => lf.id === rf.id || (lf.savedName && lf.savedName === rf.savedName))) {
-                  lItem.uploadedFiles.push(rf);
-                }
-              });
+          // Which files belong in the current view?
+          const allowedCloudFiles = isAll
+            ? validCloudFiles
+            : validCloudFiles.filter(f => isUserFileMatch(f, curTargetUser, curUserName, currentUsers));
+
+          let stateChanged = false;
+
+          // Ensure any itemCodes present in cloud files exist in state.scores
+          allowedCloudFiles.forEach(cf => {
+            const cItemId = cf.itemId || detectItemCodeFromFileName(cf.savedName || cf.name) || '1.1';
+            if (!window.state.scores[cItemId]) {
+              window.state.scores[cItemId] = { skor: 0, catatan: '', uploadedFiles: [] };
+              stateChanged = true;
+            }
+          });
+
+          // Reconcile each item in window.state.scores
+          Object.keys(window.state.scores).forEach(itemId => {
+            const itm = window.state.scores[itemId];
+            if (!itm) return;
+            if (!Array.isArray(itm.uploadedFiles)) itm.uploadedFiles = [];
+
+            const beforeCount = itm.uploadedFiles.length;
+
+            // Remove any files not present in allowedCloudFiles
+            itm.uploadedFiles = itm.uploadedFiles.filter(f => {
+              return allowedCloudFiles.some(cf => cf.id === f.id || (cf.savedName && (cf.savedName === f.savedName || cf.savedName === f.name)));
             });
 
-            if (remoteUserData.supervisi && (!localUserData.supervisi || Object.keys(localUserData.supervisi.scores || {}).length === 0)) {
-              localUserData.supervisi = remoteUserData.supervisi;
+            if (itm.uploadedFiles.length !== beforeCount) {
+              stateChanged = true;
             }
-            localStorage.setItem(localKey, JSON.stringify(localUserData));
-          } catch(e) {}
-        };
 
-        if (remoteDataRes && typeof remoteDataRes === 'object' && !remoteDataRes.error) {
-          Object.keys(remoteDataRes).forEach(k => {
-            const rec = remoteDataRes[k];
-            if (rec && rec.user) {
-              mergeUserRecord(rec.user, rec);
-            } else if (rec && rec.payloadJson) {
-              mergeUserRecord(k, rec);
-            }
+            // Add any missing allowed cloud files for this itemId
+            allowedCloudFiles.forEach(cf => {
+              const cItemId = cf.itemId || detectItemCodeFromFileName(cf.savedName || cf.name) || '1.1';
+              if (cItemId === itemId) {
+                const exists = itm.uploadedFiles.some(f => f.id === cf.id || (f.savedName && (f.savedName === cf.savedName || f.savedName === cf.name)));
+                if (!exists) {
+                  itm.uploadedFiles.push(cf);
+                  stateChanged = true;
+                }
+              }
+            });
           });
-        }
 
-        if (metaUpdated || Object.keys(localMap).length > 0) {
-          localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(localMap));
+          if (stateChanged) {
+            console.log(`[Realtime Sync] Perubahan berkas terdeteksi dari cloud (${validCloudFiles.length} berkas aktif). Memperbarui antarmuka...`);
+            if (typeof renderScores === 'function') {
+              try { renderScores(); } catch(e) {}
+            }
+            if (typeof updateAllScores === 'function') {
+              try { updateAllScores(); } catch(e) {}
+            }
+            if (typeof renderApp === 'function') {
+              try { renderApp(); } catch(e) {}
+            }
+          }
         }
-
-        // 5. Ensure any discovered cloud files without records in pkks_file_meta get mirrored to Firebase bridge
-        Object.values(localMap).forEach(meta => {
-          if (!meta || !meta.id || isFileDeleted(meta.id, meta.savedName, meta.name)) return;
-          if (remoteMetaMap && remoteMetaMap[toFirebaseKey(meta.id)]) return;
-          const safeFileId = toFirebaseKey(meta.id);
-          originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${safeFileId}.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(meta)
-          }).catch(() => {});
-        });
 
       } catch (e) {
         console.warn("[Firebase] syncSchoolDataFromFirebase notice:", e);
@@ -1577,59 +1181,54 @@
       const baseUrl = normalizeFirebaseUrl(s.appsScriptUrl);
       const safeNpsn = toFirebaseKey(npsn);
 
-      // 1. Firebase Server-Sent Events (SSE) Listener for Realtime Deletions
-      try {
-        if (window.EventSource && !window._fbDelEventSource) {
-          const delUrl = `${baseUrl}/pkks_deleted_files/${safeNpsn}.json`;
-          const es = new EventSource(delUrl);
-          es.addEventListener('put', (e) => {
-            try {
-              const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
-              syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
-            } catch(err) {}
-          });
-          window._fbDelEventSource = es;
-        }
-      } catch(e) {}
+      const triggerSync = () => {
+        try {
+          const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+          const curUser = (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all';
+          syncSchoolDataFromFirebase(curNpsn, curUser);
+        } catch(err) {}
+      };
 
-      // 2. Firebase SSE Listener for Realtime Metadata
+      // 1. Firebase SSE Listener for Realtime Metadata changes
       try {
         if (window.EventSource && !window._fbMetaEventSource) {
           const metaUrl = `${baseUrl}/pkks_file_meta/${safeNpsn}.json`;
           const esMeta = new EventSource(metaUrl);
-          esMeta.addEventListener('put', (e) => {
-            try {
-              const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
-              syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
-            } catch(err) {}
+          ['put', 'patch', 'message'].forEach(evt => {
+            esMeta.addEventListener(evt, triggerSync);
           });
+          esMeta.onerror = () => {};
           window._fbMetaEventSource = esMeta;
         }
       } catch(e) {}
 
-      // 3. Tab Visibility & Focus Listener (Instant update when switching to tab on mobile!)
+      // 2. Firebase SSE Listener for Realtime Score/Data changes
+      try {
+        if (window.EventSource && !window._fbDataEventSource) {
+          const dataUrl = `${baseUrl}/pkks_data/${safeNpsn}.json`;
+          const esData = new EventSource(dataUrl);
+          ['put', 'patch', 'message'].forEach(evt => {
+            esData.addEventListener(evt, triggerSync);
+          });
+          esData.onerror = () => {};
+          window._fbDataEventSource = esData;
+        }
+      } catch(e) {}
+
+      // 3. Tab Visibility & Focus Listener (Instant update when switching tabs or unlocking phone)
       if (!window._realtimeVisibilityBound) {
         window._realtimeVisibilityBound = true;
         document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
-            syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
-          }
+          if (document.visibilityState === 'visible') triggerSync();
         });
-        window.addEventListener('focus', () => {
-          const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
-          syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
-        });
+        window.addEventListener('focus', triggerSync);
       }
 
-      // 4. Periodic Heartbeat Poller (Every 10 seconds in background)
+      // 4. Periodic Poller (Every 5 seconds in background)
       if (!window._realtimePollInterval) {
         window._realtimePollInterval = setInterval(() => {
-          if (!document.hidden) {
-            const curNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
-            syncSchoolDataFromFirebase(curNpsn, (window.state && window.state.currentUser) ? window.state.currentUser.id : 'all');
-          }
-        }, 10000);
+          if (!document.hidden) triggerSync();
+        }, 5000);
       }
     }
 
@@ -2570,7 +2169,7 @@
           if (res.ok && resData.status === 'success') {
             this.settings = newSettings;
             this.userList = newSettings.users || [];
-            this.showToast('✓ Pengaturan berhasil disimpan ke sistem!');
+            this.showToast('âœ“ Pengaturan berhasil disimpan ke sistem!');
             renderApp();
           } else {
             alert("Gagal menyimpan pengaturan: " + (resData.message || 'Error'));
@@ -2713,9 +2312,9 @@
             body: JSON.stringify(payload)
           });
 
-          this.showToast('✓ Data berhasil disimpan!');
+          this.showToast('âœ“ Data berhasil disimpan!');
         } catch (e) {
-          this.showToast('✓ Data disimpan!');
+          this.showToast('âœ“ Data disimpan!');
         }
       }
 
@@ -2821,7 +2420,7 @@
           } catch(e) {}
           await state.loadUserData();
           initRealtimeCloudListener(state.schoolNpsn);
-          state.showToast(`✓ Selamat Datang, ${userObj.name}!`);
+          state.showToast(`âœ“ Selamat Datang, ${userObj.name}!`);
         } else {
           alert(data.message || 'Username atau Password salah!');
         }
@@ -2840,7 +2439,7 @@
           } catch(e) {}
           await state.loadUserData();
           initRealtimeCloudListener(state.schoolNpsn);
-          state.showToast(`✓ Selamat Datang, ${userObj.name}!`);
+          state.showToast(`âœ“ Selamat Datang, ${userObj.name}!`);
         } else {
           alert("Password salah!");
         }
@@ -2872,7 +2471,7 @@
       const safeCustomName = 'logo_sekolah_' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
       formData.append('custom_filename', safeCustomName);
       
-      state.showToast('⏳ Mengunggah logo...');
+      state.showToast('â³ Mengunggah logo...');
       try {
         const res = await fetch('/api/upload', { method: 'POST', body: formData });
         const resData = await res.json();
@@ -2886,7 +2485,7 @@
           if (previewEl) previewEl.src = url;
           state.settings.logoSekolah = url;
           await state.saveSettings(state.settings);
-          state.showToast('✅ Logo berhasil diubah!');
+          state.showToast('âœ… Logo berhasil diubah!');
           renderApp();
         } else {
           alert('Gagal mengunggah logo: ' + (resData.message || 'Error'));
@@ -3032,7 +2631,7 @@
       state.userModal = null;
 
       await state.saveSettings(state.settings);
-      state.showToast(`✓ Akun "${name}" (${role === 'kepsek' ? 'Kepsek' : 'Guru'}) berhasil disimpan!`);
+      state.showToast(`âœ“ Akun "${name}" (${role === 'kepsek' ? 'Kepsek' : 'Guru'}) berhasil disimpan!`);
       renderApp();
     }
 
@@ -3073,7 +2672,7 @@
       });
 
       await state.saveScores();
-      state.showToast('✓ Link Google Drive berhasil ditambahkan!');
+      state.showToast('âœ“ Link Google Drive berhasil ditambahkan!');
       renderApp();
     }
 
@@ -3214,7 +2813,7 @@
         if (res.ok && data.status === 'success') {
           state.superAdminSchoolModalOpen = false;
           state.superAdminSchoolModalData = null;
-          state.showToast("✓ Data sekolah berhasil disimpan!");
+          state.showToast("âœ“ Data sekolah berhasil disimpan!");
           await loadAndOpenSuperAdminDashboard();
         } else {
           alert("Gagal: " + (data.message || 'Error'));
@@ -3262,7 +2861,7 @@
       state.superAdminDashboardOpen = false;
       await state.init();
       renderApp();
-      state.showToast(`✓ Beralih ke portal sekolah: ${nama}`);
+      state.showToast(`âœ“ Beralih ke portal sekolah: ${nama}`);
     }
 
     function toggleSchoolPwdRow(idx) {
@@ -3270,13 +2869,13 @@
       const btn = document.getElementById(`sa-pwd-btn-${idx}`);
       if (el && btn) {
         if (el.dataset.shown === 'true') {
-          el.innerText = '••••••••';
+          el.innerText = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢';
           el.dataset.shown = 'false';
-          btn.innerText = '👁️';
+          btn.innerText = 'ðŸ‘ï¸';
         } else {
           el.innerText = el.dataset.real;
           el.dataset.shown = 'true';
-          btn.innerText = '🙈';
+          btn.innerText = 'ðŸ™ˆ';
         }
       }
     }
@@ -3376,7 +2975,7 @@
           
           await state.init();
           renderApp();
-          state.showToast(`✓ Selamat datang di Portal ${data.namaSekolah}!`);
+          state.showToast(`âœ“ Selamat datang di Portal ${data.namaSekolah}!`);
         } else {
           alert('Gagal: ' + (data.message || 'Unknown error'));
         }
@@ -3407,7 +3006,7 @@
       state.selectedTeacherId = teacherId;
       await state.loadUserData();
       const tName = teacherId === 'all' 
-        ? '👥 Semuanya (Gabungan Seluruh Guru)' 
+        ? 'ðŸ‘¥ Semuanya (Gabungan Seluruh Guru)' 
         : ((state.userList.find(u => u.id === teacherId) || {}).name || teacherId);
       state.showToast(`Memuat data: ${tName}`);
       renderApp();
@@ -3447,7 +3046,7 @@
       const activeFolderId = extractFolderId((state.settings && state.settings.googleDriveLink) || s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID) || DEFAULT_GDRIVE_FOLDER_ID;
       const driveFolderUrl = `https://drive.google.com/drive/folders/${activeFolderId}`;
 
-      state.showToast(`⏳ Mengunggah ${filesArray.length} berkas ke Google Drive...`);
+      state.showToast(`â³ Mengunggah ${filesArray.length} berkas ke Google Drive...`);
 
       for (const file of filesArray) {
         try {
@@ -3548,7 +3147,7 @@
       if (inputEl) inputEl.value = '';
 
       await state.saveScores();
-      state.showToast(`☁️ Berkas berhasil disimpan ke Google Drive!`);
+      state.showToast(`â˜ï¸ Berkas berhasil disimpan ke Google Drive!`);
       renderApp();
     }
 
@@ -3603,7 +3202,7 @@
         }
 
         await state.saveScores();
-        state.showToast('🗑️ Berkas berhasil dihapus dari Google Drive & Sistem.');
+        state.showToast('ðŸ—‘ï¸ Berkas berhasil dihapus dari Google Drive & Sistem.');
         renderApp();
       }
     }
@@ -3617,7 +3216,7 @@
     async function renderDocxPreview(file, containerId) {
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = '<div style="color: #38bdf8; padding: 40px; text-align: center; font-weight: 700;">⏳ Memproses dan memuat dokumen DOCX ke layar...</div>';
+      container.innerHTML = '<div style="color: #38bdf8; padding: 40px; text-align: center; font-weight: 700;">â³ Memproses dan memuat dokumen DOCX ke layar...</div>';
       try {
         let blob = null;
         if (file.isBlobUrl && file.url) {
@@ -3646,12 +3245,12 @@
 
         container.innerHTML = `
           <div style="text-align: center; padding: 50px 20px; color: #f8fafc; background: #1e293b; border-radius: 12px; margin: 20px;">
-            <div style="font-size: 52px; margin-bottom: 12px;">📝</div>
+            <div style="font-size: 52px; margin-bottom: 12px;">ðŸ“</div>
             <h4 style="font-size: 16px; font-weight: 800; margin-bottom: 6px;">${file.name || 'Dokumen Word DOCX'}</h4>
             <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px;">Berkas tersimpan aman di Google Drive sekolah.</p>
             <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-              <a href="${file.driveUrl || 'https://drive.google.com/drive/folders/' + DEFAULT_GDRIVE_FOLDER_ID}" target="_blank" class="btn-primary" style="width: auto; padding: 10px 20px; background: #0284c7; text-decoration: none; font-weight: 700;">📂 Buka di Google Drive</a>
-              <a href="${file.url || '#'}" download="${file.name || 'dokumen.docx'}" class="btn-primary" style="width: auto; padding: 10px 20px; background: #059669; text-decoration: none; font-weight: 700;">⬇️ Unduh Berkas</a>
+              <a href="${file.driveUrl || 'https://drive.google.com/drive/folders/' + DEFAULT_GDRIVE_FOLDER_ID}" target="_blank" class="btn-primary" style="width: auto; padding: 10px 20px; background: #0284c7; text-decoration: none; font-weight: 700;">ðŸ“‚ Buka di Google Drive</a>
+              <a href="${file.url || '#'}" download="${file.name || 'dokumen.docx'}" class="btn-primary" style="width: auto; padding: 10px 20px; background: #059669; text-decoration: none; font-weight: 700;">â¬‡ï¸ Unduh Berkas</a>
             </div>
           </div>
         `;
@@ -3667,7 +3266,7 @@
     async function renderXlsxPreview(file, containerId) {
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = '<div style="color: #38bdf8; padding: 40px; text-align: center; font-weight: 700;">⏳ Memproses lembar kerja Excel...</div>';
+      container.innerHTML = '<div style="color: #38bdf8; padding: 40px; text-align: center; font-weight: 700;">â³ Memproses lembar kerja Excel...</div>';
       try {
         let blob = null;
         if (file.isBlobUrl && file.url) {
@@ -3686,7 +3285,7 @@
           const htmlTable = XLSX.utils.sheet_to_html(sheet, { id: 'xlsx-table', editable: false });
           container.innerHTML = `
             <div style="padding: 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-weight: 800; color: #0f172a; font-size: 13px;">📊 Lembar Kerja: ${firstSheetName}</span>
+              <span style="font-weight: 800; color: #0f172a; font-size: 13px;">ðŸ“Š Lembar Kerja: ${firstSheetName}</span>
               <span style="font-size: 11px; color: #64748b; font-weight: 600;">Total Lembar: ${workbook.SheetNames.length}</span>
             </div>
             <div style="overflow: auto; max-height: 75vh; padding: 12px; background: white; color: #0f172a;">${htmlTable}</div>
@@ -3871,7 +3470,7 @@
       const loadingEl = document.getElementById('image-canvas-loading');
       if (loadingEl) {
         loadingEl.style.display = 'block';
-        loadingEl.innerText = '⏳ Memuat gambar ke canvas...';
+        loadingEl.innerText = 'â³ Memuat gambar ke canvas...';
       }
 
       const img = new Image();
@@ -3904,7 +3503,7 @@
             const driveHref = (state.previewFile && state.previewFile.driveUrl) || `https://drive.google.com/drive/folders/${fFolderId}`;
             container.innerHTML = `
               <div style="background:#1e293b; border:1.5px solid #38bdf8; border-radius:16px; padding:28px 20px; text-align:center; max-width:480px; margin:24px auto; color:white; box-shadow:0 12px 30px rgba(0,0,0,0.6);">
-                <div style="font-size:52px; margin-bottom:12px;">☁️</div>
+                <div style="font-size:52px; margin-bottom:12px;">â˜ï¸</div>
                 <h4 style="font-size:16px; font-weight:800; color:#38bdf8; margin-bottom:8px;">Berkas Tersimpan di Google Drive</h4>
                 <p style="font-size:12px; color:#cbd5e1; margin-bottom:6px; word-break:break-all;"><strong>${rawFileName}</strong></p>
                 <p style="font-size:11px; color:#94a3b8; margin-bottom:20px; line-height:1.6;">
@@ -3912,10 +3511,10 @@
                 </p>
                 <div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
                   <a href="${driveHref}" target="_blank" class="btn-primary" style="padding:12px 24px; font-size:13px; background:#0284c7; text-decoration:none; font-weight:800; border-radius:10px; display:inline-flex; align-items:center; gap:8px;">
-                    📂 Buka di Google Drive
+                    ðŸ“‚ Buka di Google Drive
                   </a>
                   <button type="button" onclick="closePreview()" style="background:#dc2626; color:white; border:none; padding:10px 24px; font-size:13px; font-weight:800; border-radius:10px; cursor:pointer;">
-                    ⬅️ KEMBALI KE APLIKASI
+                    â¬…ï¸ KEMBALI KE APLIKASI
                   </button>
                 </div>
               </div>
@@ -4029,7 +3628,7 @@
       const container = document.getElementById(containerId);
       if (!container) return;
 
-      container.innerHTML = '<div style="color:white; font-size:13px; font-weight:700; padding:40px; text-align:center;">⏳ Memuat Halaman Dokumen PDF...</div>';
+      container.innerHTML = '<div style="color:white; font-size:13px; font-weight:700; padding:40px; text-align:center;">â³ Memuat Halaman Dokumen PDF...</div>';
 
       let fullUrl = url;
       if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('data:') && !url.startsWith('blob:')) {
@@ -4098,7 +3697,7 @@
         console.error("PDF Canvas Error:", err);
         container.innerHTML = `
           <div style="color:#fcd34d; text-align:center; padding:40px;">
-            <div style="font-size:36px; margin-bottom:8px;">⚠️</div>
+            <div style="font-size:36px; margin-bottom:8px;">âš ï¸</div>
             <h4 style="font-size:14px; font-weight:800; color:white;">Gagal Merendisi Halaman PDF</h4>
             <p style="font-size:11px; color:#cbd5e1; margin-top:4px;">${err.message || 'File PDF tidak dapat dibaca.'}</p>
           </div>
@@ -4107,9 +3706,9 @@
     }
 
     window.triggerManualCloudSync = async function() {
-      state.showToast('⏳ Menyinkronkan seluruh berkas dari Google Drive & Firebase...');
+      state.showToast('â³ Menyinkronkan seluruh berkas dari Google Drive & Firebase...');
       await state.loadUserData();
-      state.showToast('✅ Berkas cloud berhasil disinkronkan & diperbarui!');
+      state.showToast('âœ… Berkas cloud berhasil disinkronkan & diperbarui!');
     };
 
     // MAIN RENDER FUNCTION
@@ -4160,7 +3759,7 @@
                   <div style="display: flex; align-items: center; position: relative;">
                     <input type="password" id="school-password" class="form-input" placeholder="Masukkan Password" style="flex: 1; padding-right: 40px;" />
                     <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 16px; color: #64748b;">
-                      👁️
+                      ðŸ‘ï¸
                     </button>
                   </div>
                 </div>
@@ -4199,7 +3798,7 @@
                 <div class="form-group">
                   <label class="form-label">Pilih Akun Guru / Kepala Sekolah:</label>
                   <select id="login-username" class="form-select">
-                    <option value="all">👥 Semuanya / Gabungan Seluruh Guru</option>
+                    <option value="all">ðŸ‘¥ Semuanya / Gabungan Seluruh Guru</option>
                     ${state.userList.map(u => `
                       <option value="${u.id}" ${u.id === 'admin' ? 'selected' : ''}>${u.name} - ${u.jabatan || (u.role === 'kepsek' ? 'Kepala Sekolah' : 'Guru')}</option>
                     `).join('')}
@@ -4273,7 +3872,7 @@
           <div class="card" style="margin-bottom: 24px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
               <h3 class="card-title">Capaian per Standar Nasional Pendidikan</h3>
-              <button onclick="state.activeTab = 'cetak'; renderApp(); setTimeout(() => window.print(), 150);" class="btn-xs btn-view" style="padding: 8px 14px; font-size: 11px;">🖨️ Cetak Instrumen PKKS (Per Standar)</button>
+              <button onclick="state.activeTab = 'cetak'; renderApp(); setTimeout(() => window.print(), 150);" class="btn-xs btn-view" style="padding: 8px 14px; font-size: 11px;">ðŸ–¨ï¸ Cetak Instrumen PKKS (Per Standar)</button>
             </div>
 
             <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
@@ -4315,13 +3914,13 @@
           <div class="no-print" style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
               <div>
-                <h2 style="font-size: 18px; font-weight: 900; color: #0f172a;">🖨️ Cetak Hasil Instrumen (1 Standar = 1 Halaman A4)</h2>
+                <h2 style="font-size: 18px; font-weight: 900; color: #0f172a;">ðŸ–¨ï¸ Cetak Hasil Instrumen (1 Standar = 1 Halaman A4)</h2>
                 <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Pilih tombol Standar di bawah untuk menampilkan & mencetak 1 lembar instrumen secara mandiri.</p>
               </div>
 
               <div style="display: flex; align-items: center; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <label style="font-size: 11px; font-weight: 800; color: #334155;">📍 Tanggal Cetak:</label>
+                  <label style="font-size: 11px; font-weight: 800; color: #334155;">ðŸ“ Tanggal Cetak:</label>
                   <input 
                     type="text" 
                     value="${state.settings.tanggalCetak || 'Bekasi, 29 September 2026'}"
@@ -4332,7 +3931,7 @@
                 </div>
 
                 <button onclick="window.print()" class="btn-primary" style="width: auto; padding: 10px 20px; background: #059669; flex-shrink: 0; font-weight: 800;">
-                  🖨️ Cetak / Simpan PDF
+                  ðŸ–¨ï¸ Cetak / Simpan PDF
                 </button>
               </div>
             </div>
@@ -4359,7 +3958,7 @@
                     : 'background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;'
                 }"
               >
-                📄 Tampilkan Semua (8 Standar)
+                ðŸ“„ Tampilkan Semua (8 Standar)
               </button>
             </div>
           </div>
@@ -4371,7 +3970,7 @@
                   
                   ${state.selectedCetakStandar === 'all' ? `
                     <div class="no-print" style="position: absolute; top: -24px; left: 0; background: #0f172a; color: white; font-size: 10px; font-weight: 800; padding: 2px 10px; border-radius: 4px;">
-                      Halaman ${idx + 1} dari 8 — Standar ${std.code}
+                      Halaman ${idx + 1} dari 8 â€” Standar ${std.code}
                     </div>
                   ` : ''}
 
@@ -4429,16 +4028,16 @@
                               </div>
                             </td>
                             <td style="padding: 4px; text-align: center; border-right: 1px solid #cbd5e1; vertical-align: middle; font-size: 13px; font-weight: 900; color: #059669;">
-                              ${sc === 1 ? '✓' : ''}
+                              ${sc === 1 ? 'âœ“' : ''}
                             </td>
                             <td style="padding: 4px; text-align: center; border-right: 1px solid #cbd5e1; vertical-align: middle; font-size: 13px; font-weight: 900; color: #059669;">
-                              ${sc === 2 ? '✓' : ''}
+                              ${sc === 2 ? 'âœ“' : ''}
                             </td>
                             <td style="padding: 4px; text-align: center; border-right: 1px solid #cbd5e1; vertical-align: middle; font-size: 13px; font-weight: 900; color: #059669;">
-                              ${sc === 3 ? '✓' : ''}
+                              ${sc === 3 ? 'âœ“' : ''}
                             </td>
                             <td style="padding: 4px; text-align: center; vertical-align: middle; font-size: 13px; font-weight: 900; color: #059669;">
-                              ${sc === 4 ? '✓' : ''}
+                              ${sc === 4 ? 'âœ“' : ''}
                             </td>
                           </tr>
                         `;
@@ -4525,15 +4124,15 @@
         mainBodyHTML = `
           <div class="no-print" style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <div>
-              <h2 style="font-size: 18px; font-weight: 900; color: #0f172a;">📋 Instrumen Supervisi Administrasi Pembelajaran</h2>
+              <h2 style="font-size: 18px; font-weight: 900; color: #0f172a;">ðŸ“‹ Instrumen Supervisi Administrasi Pembelajaran</h2>
               <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Penilaian Komponen Administrasi Pembelajaran Guru (Format Cetak A4 Standar)</p>
             </div>
             <div style="display: flex; gap: 10px;">
               <button onclick="state.saveScores()" class="btn-primary" style="width: auto; padding: 10px 20px; background: #2563eb; font-size: 12px;">
-                💾 Simpan Form Supervisi
+                ðŸ’¾ Simpan Form Supervisi
               </button>
               <button onclick="window.print()" class="btn-primary" style="width: auto; padding: 10px 20px; background: #059669; font-size: 12px;">
-                🖨️ Cetak Instrumen Supervisi (A4)
+                ðŸ–¨ï¸ Cetak Instrumen Supervisi (A4)
               </button>
             </div>
           </div>
@@ -4618,7 +4217,7 @@
                             onclick="state.setSupervisiScore(${itemNo}, ${sVal})" 
                             style="padding: 4px; text-align: center; font-size: 12px; font-weight: 900; border-right: ${borderRight}; cursor: pointer; ${isSelected ? 'background: #dcfce7; color: #047857;' : 'background: white;'}"
                           >
-                            ${isSelected ? '✓' : ''}
+                            ${isSelected ? 'âœ“' : ''}
                           </td>
                         `;
                       }).join('')}
@@ -4725,14 +4324,14 @@
         const s = state.settings || {};
         mainBodyHTML = `
           <div style="margin-bottom: 24px;">
-            <h2 style="font-size: 20px; font-weight: 900; color: #0f172a;">⚙️ Pengaturan System E-PKKS</h2>
+            <h2 style="font-size: 20px; font-weight: 900; color: #0f172a;">âš™ï¸ Pengaturan System E-PKKS</h2>
             <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Kelola profil sekolah, password login, tautan Google Drive, serta daftar akun guru & jabatannya.</p>
           </div>
 
           <form onsubmit="handleSaveSettingsForm(event)">
             <!-- CARD 1: INFORMASI SEKOLAH -->
             <div class="card" style="margin-bottom: 20px;">
-              <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">🏫 Profil Sekolah & Kepala Sekolah</h3>
+              <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">ðŸ« Profil Sekolah & Kepala Sekolah</h3>
               
               <div class="form-group" style="margin-bottom:16px;">
                 <label class="form-label">Logo Sekolah (PNG/JPG):</label>
@@ -4742,7 +4341,7 @@
                   </div>
                   <div style="flex: 1;">
                     <input type="file" id="set-logo-file" onchange="previewSelectedLogo(event)" class="form-input" accept="image/*" style="padding: 6px; font-size: 11px; margin-bottom: 8px;" />
-                    <button type="button" onclick="uploadLogoBtn()" class="btn-primary" style="padding: 6px 16px; font-size: 11px; width: auto; background: #0284c7;">📤 Upload & Ganti Logo</button>
+                    <button type="button" onclick="uploadLogoBtn()" class="btn-primary" style="padding: 6px 16px; font-size: 11px; width: auto; background: #0284c7;">ðŸ“¤ Upload & Ganti Logo</button>
                     <input type="hidden" id="set-logo-url" value="${s.logoSekolah || ''}" />
                   </div>
                 </div>
@@ -4773,7 +4372,7 @@
 
             <!-- CARD 2: PASSWORD & SECURITY -->
             <div class="card" style="margin-bottom: 20px;">
-              <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">🔑 Keamanan & Password Login</h3>
+              <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">ðŸ”‘ Keamanan & Password Login</h3>
               <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label">Password Login Utama (Sama untuk Seluruh Akun):</label>
                 <input type="text" id="set-default-password" class="form-input" value="${s.defaultPassword || 'Sditannisa'}" required />
@@ -4783,16 +4382,16 @@
 
             <!-- CARD 3: CLOUD STORAGE -->
             <div class="card" style="margin-bottom: 20px;">
-              <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">☁️ Integrasi Google Drive (Otomatis Upload)</h3>
+              <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">â˜ï¸ Integrasi Google Drive (Otomatis Upload)</h3>
               
               <div class="form-group" style="margin-bottom: 12px;">
                 <label class="form-label" style="font-weight: 800; font-size: 11px; color: #334155; text-transform: uppercase;">ID / LINK FOLDER GOOGLE DRIVE (Tujuan Upload):</label>
                 <div style="display:flex; gap:8px;">
                   <input type="text" id="set-gdrive-link" class="form-input" value="${s.googleDriveLink || '1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x'}" placeholder="Masukkan ID (1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x) atau link folder Google Drive" />
-                  <button type="button" onclick="openActiveGDriveFolder()" class="btn-primary" style="background:#059669; width:auto; padding:0 14px; white-space:nowrap; font-size:11.5px;" title="Buka Folder Google Drive">📂 Buka GDrive</button>
+                  <button type="button" onclick="openActiveGDriveFolder()" class="btn-primary" style="background:#059669; width:auto; padding:0 14px; white-space:nowrap; font-size:11.5px;" title="Buka Folder Google Drive">ðŸ“‚ Buka GDrive</button>
                 </div>
                 <p style="font-size: 11.5px; color: #64748b; margin-top: 6px; line-height: 1.4;">
-                  * Aktif: <b>${extractFolderId(s.googleDriveLink || '1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x')}</b> — Anda dapat memasukkan ID folder langsung (contoh: <b>1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x</b>) maupun link lengkap Google Drive (<i>https://drive.google.com/drive/folders/<b>1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x</b>?usp=sharing</i>).
+                  * Aktif: <b>${extractFolderId(s.googleDriveLink || '1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x')}</b> â€” Anda dapat memasukkan ID folder langsung (contoh: <b>1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x</b>) maupun link lengkap Google Drive (<i>https://drive.google.com/drive/folders/<b>1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x</b>?usp=sharing</i>).
                 </p>
               </div>
 
@@ -4800,7 +4399,7 @@
                 <label class="form-label" style="font-weight: 800; font-size: 11px; color: #334155; text-transform: uppercase;">URL FIREBASE REALTIME DATABASE / WEB APP:</label>
                 <div style="display:flex; gap:8px;">
                   <input type="text" id="set-appsscript-url" class="form-input" value="${s.appsScriptUrl || 'https://pkks-b9f13-default-rtdb.firebaseio.com/'}" placeholder="Contoh: https://pkks-b9f13-default-rtdb.firebaseio.com/" readonly style="background-color: #f1f5f9; cursor: not-allowed;" />
-                  <button type="button" onclick="unlockAppsScriptUrl()" class="btn-primary" style="background:#0f172a; width:auto; padding:0 15px;" title="Buka Kunci">🔒</button>
+                  <button type="button" onclick="unlockAppsScriptUrl()" class="btn-primary" style="background:#0f172a; width:auto; padding:0 15px;" title="Buka Kunci">ðŸ”’</button>
                 </div>
                 <p style="font-size: 11px; color: #64748b; margin-top: 4px;">* Dikunci (Hanya untuk Super Admin).</p>
               </div>
@@ -4808,7 +4407,7 @@
 
             
               <div class="card" style="margin-top: 20px;">
-                <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">🏢 Keamanan Sekolah</h3>
+                <h3 class="card-title" style="color: #0f172a; margin-bottom: 16px;">ðŸ¢ Keamanan Sekolah</h3>
                 <div class="form-group">
                   <label class="form-label">Password Login Sekolah:</label>
                   <input type="text" id="setting-school-pwd" class="form-input" value="${state.settings.schoolPassword || state.schoolNpsn}" />
@@ -4820,11 +4419,11 @@
             <div class="card" style="margin-bottom: 20px;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <div>
-                  <h3 class="card-title" style="color: #0f172a; margin: 0;">👥 Daftar Akun Guru & Jabatan (Username Login)</h3>
+                  <h3 class="card-title" style="color: #0f172a; margin: 0;">ðŸ‘¥ Daftar Akun Guru & Jabatan (Username Login)</h3>
                   <p style="font-size: 11px; color: #64748b; margin-top: 2px;">Seluruh guru & jabatannya secara otomatis menjadi pilihan username pada menu login.</p>
                 </div>
                 <button type="button" onclick="openAddUserModal()" class="btn-xs btn-download" style="padding: 8px 16px; font-size: 11px; background: #059669;">
-                  ➕ Tambah Guru / Pengguna Baru
+                  âž• Tambah Guru / Pengguna Baru
                 </button>
               </div>
               
@@ -4850,8 +4449,8 @@
                         </span>
                       </td>
                       <td style="padding: 10px; text-align: center;">
-                        <button type="button" onclick="openEditUserModal(${idx})" class="btn-xs btn-view" style="font-size: 10px; margin-right: 4px;">✏️ Edit</button>
-                        <button type="button" onclick="deleteUserFromSettings(${idx})" class="btn-xs btn-delete" style="font-size: 10px;">🗑️ Hapus</button>
+                        <button type="button" onclick="openEditUserModal(${idx})" class="btn-xs btn-view" style="font-size: 10px; margin-right: 4px;">âœï¸ Edit</button>
+                        <button type="button" onclick="deleteUserFromSettings(${idx})" class="btn-xs btn-delete" style="font-size: 10px;">ðŸ—‘ï¸ Hapus</button>
                       </td>
                     </tr>
                   `).join('')}
@@ -4861,7 +4460,7 @@
 
             <div style="margin-top: 24px; text-align: right;">
               <button type="submit" class="btn-primary" style="width: auto; padding: 14px 32px; font-size: 14px; background: #059669; display: inline-flex;">
-                💾 Simpan Perubahan Pengaturan
+                ðŸ’¾ Simpan Perubahan Pengaturan
               </button>
             </div>
           </form>
@@ -4892,7 +4491,7 @@
                 </div>
 
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 12px 0;">
-                  <strong style="font-size: 11px; color: #475569; text-transform: uppercase; display: block; margin-bottom: 4px;">📌 Bukti Fisik yang Diperlukan:</strong>
+                  <strong style="font-size: 11px; color: #475569; text-transform: uppercase; display: block; margin-bottom: 4px;">ðŸ“Œ Bukti Fisik yang Diperlukan:</strong>
                   <p style="font-size: 12px; color: #334155; line-height: 1.5;">${item.buktiFisik}</p>
                 </div>
 
@@ -4912,13 +4511,13 @@
                 </div>
 
                 <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed #cbd5e1;">
-                  <label class="form-label">📁 Upload Dokumen Bukti Fisik:</label>
+                  <label class="form-label">ðŸ“ Upload Dokumen Bukti Fisik:</label>
                   
                   <div class="upload-zone" onclick="document.getElementById('file-input-${item.id}').click()">
-                    <span style="font-size: 26px; display: block; margin-bottom: 4px;">${state.settings.googleDriveLink ? '☁️' : '📂'}</span>
+                    <span style="font-size: 26px; display: block; margin-bottom: 4px;">${state.settings.googleDriveLink ? 'â˜ï¸' : 'ðŸ“‚'}</span>
                     <strong style="font-size: 12px; color: #0f172a;">Klik untuk memilih atau unggah berkas bukti fisik</strong>
                     <p style="font-size: 10px; color: ${state.settings.googleDriveLink ? '#0284c7' : '#64748b'}; margin-top: 4px; font-weight: 700;">
-                      ${state.settings.googleDriveLink ? `☁️ Penyimpanan Otomatis: Google Drive (${activeUserObj.name})` : 'Format yang didukung: DOCX, XLSX, PDF, PNG, JPG, JPEG, WEBP, PPTX, TXT'}
+                      ${state.settings.googleDriveLink ? `â˜ï¸ Penyimpanan Otomatis: Google Drive (${activeUserObj.name})` : 'Format yang didukung: DOCX, XLSX, PDF, PNG, JPG, JPEG, WEBP, PPTX, TXT'}
                     </p>
                     <input 
                       type="file" 
@@ -4933,27 +4532,27 @@
                     <div class="file-grid">
                       ${files.map(f => {
                         const fExt = (f.name || f.savedName || '').split('.').pop().toLowerCase();
-                        let badgeIcon = '📄';
+                        let badgeIcon = 'ðŸ“„';
                         let badgeBg = '#64748b';
                         let badgeText = fExt ? fExt.toUpperCase() : 'BERKAS';
                         if (['docx', 'doc'].includes(fExt)) {
-                          badgeIcon = '📝';
+                          badgeIcon = 'ðŸ“';
                           badgeBg = '#0284c7';
                           badgeText = 'WORD DOCX';
                         } else if (['xlsx', 'xls', 'csv'].includes(fExt)) {
-                          badgeIcon = '📊';
+                          badgeIcon = 'ðŸ“Š';
                           badgeBg = '#059669';
                           badgeText = 'EXCEL';
                         } else if (fExt === 'pdf') {
-                          badgeIcon = '📕';
+                          badgeIcon = 'ðŸ“•';
                           badgeBg = '#dc2626';
                           badgeText = 'PDF';
                         } else if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(fExt)) {
-                          badgeIcon = '🖼️';
+                          badgeIcon = 'ðŸ–¼ï¸';
                           badgeBg = '#7c3aed';
                           badgeText = 'GAMBAR';
                         } else if (['pptx', 'ppt'].includes(fExt)) {
-                          badgeIcon = '📽️';
+                          badgeIcon = 'ðŸ“½ï¸';
                           badgeBg = '#d97706';
                           badgeText = 'POWERPOINT';
                         }
@@ -4963,15 +4562,15 @@
                             <div>
                               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
                                 <span style="font-size: 10px; font-weight: 800; color: white; background: ${badgeBg}; padding: 2px 7px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px;">${badgeIcon} ${badgeText}</span>
-                                ${f.isDrive ? '<span style="font-size: 10px; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 5px;">☁️ GDrive</span>' : ''}
+                                ${f.isDrive ? '<span style="font-size: 10px; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 5px;">â˜ï¸ GDrive</span>' : ''}
                               </div>
                               <div class="file-name" style="font-weight: 800; font-size: 12.5px; color: #0f172a; word-break: break-all;">${f.name || f.savedName || 'Dokumen'}</div>
                               <div class="file-meta" style="font-size: 11px; color: #64748b; margin-top: 4px;">Lokasi: ${f.isDrive ? 'Cloud Storage (Google Drive)' : (f.folder || 'PKKS 2026')} &bull; ${f.size || ''}</div>
                               <div class="file-meta" style="color:#059669; font-weight:700; font-size: 11px;">Pengunggah: ${f.user || activeUserObj.name}</div>
                             </div>
                             <div class="file-actions" style="margin-top: 10px;">
-                              <button onclick="openFilePreviewById('${item.id}', '${f.id}')" class="btn-xs btn-view">👁️ Previu</button>
-                              <button onclick="removeFile('${item.id}', '${f.id}')" class="btn-xs btn-delete">🗑️ Hapus</button>
+                              <button onclick="openFilePreviewById('${item.id}', '${f.id}')" class="btn-xs btn-view">ðŸ‘ï¸ Previu</button>
+                              <button onclick="removeFile('${item.id}', '${f.id}')" class="btn-xs btn-delete">ðŸ—‘ï¸ Hapus</button>
                             </div>
                           </div>
                         `;
@@ -5026,7 +4625,7 @@
                 onclick="state.activeTab = 'dashboard'; state.mobileSidebarOpen = false; renderApp();" 
                 class="nav-item ${state.activeTab === 'dashboard' ? 'active' : ''}"
               >
-                <span>📊 Ringkasan Evaluasi</span>
+                <span>ðŸ“Š Ringkasan Evaluasi</span>
               </div>
 
               <div style="margin-top: 10px; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; padding: 0 8px;">Daftar 8 Standar</div>
@@ -5059,7 +4658,7 @@
                             onclick="state.activeTab = '${std.id}:${it.id}'; state.mobileSidebarOpen = false; renderApp();"
                           >
                             <span>${it.code} ${it.title.substring(0, 26)}...</span>
-                            ${state.scores[it.id]?.skor ? `<span>✓</span>` : ''}
+                            ${state.scores[it.id]?.skor ? `<span>âœ“</span>` : ''}
                           </div>
                         `).join('')}
                       </div>
@@ -5074,7 +4673,7 @@
                 class="nav-item ${state.activeTab === 'supervisi' ? 'active' : ''}"
                 style="margin-top: 4px; background: #7c3aed; color: white; border: 1px solid #8b5cf6; font-weight: 800;"
               >
-                <span>📋 Instrumen Supervisi</span>
+                <span>ðŸ“‹ Instrumen Supervisi</span>
               </div>
 
               <div 
@@ -5082,7 +4681,7 @@
                 class="nav-item ${state.activeTab === 'cetak' ? 'active' : ''}"
                 style="margin-top: 6px; background: #059669; color: white; border: 1px solid #10b981; font-weight: 800;"
               >
-                <span>🖨️ Cetak Hasil Instrumen</span>
+                <span>ðŸ–¨ï¸ Cetak Hasil Instrumen</span>
               </div>
 
               <div 
@@ -5090,13 +4689,13 @@
                 class="nav-item ${state.activeTab === 'settings' ? 'active' : ''}"
                 style="margin-top: 6px; background: #2563eb; color: white; border: 1px solid #3b82f6; font-weight: 800;"
               >
-                <span>⚙️ Pengaturan System</span>
+                <span>âš™ï¸ Pengaturan System</span>
               </div>
             </div>
 
             <div style="padding: 16px; border-top: 1px solid #1e293b;">
               <button onclick="handleLogout()" class="btn-primary" style="background: #334155; font-size: 11px; padding: 10px;">
-                🚪 Keluar (Logout)
+                ðŸšª Keluar (Logout)
               </button>
             </div>
           </aside>
@@ -5110,7 +4709,7 @@
                   class="hamburger-btn" 
                   title="Buka / Tutup Menu Sidebar"
                 >
-                  ☰
+                  â˜°
                 </button>
                 <div>
                   <span style="font-size: 11px; font-weight: 800; color: #059669; text-transform: uppercase;">Aplikasi Penilaian Kinerja Kepala Sekolah</span>
@@ -5129,7 +4728,7 @@
                   >
                     ${(state.currentUser?.role === 'kepsek' || state.currentUser?.id === 'admin' || state.currentUser?.id === 'all') ? `
                       <option value="all" ${(state.activeDataUserId === 'all' || state.activeDataUserId === 'admin') ? 'selected' : ''}>
-                        👥 Semuanya / Gabungan Seluruh Guru (Admin)
+                        ðŸ‘¥ Semuanya / Gabungan Seluruh Guru (Admin)
                       </option>
                       ${state.userList.filter(u => u.id !== 'admin').map(u => `
                         <option value="${u.id}" ${u.id === state.activeDataUserId ? 'selected' : ''}>
@@ -5138,7 +4737,7 @@
                       `).join('')}
                     ` : `
                       <option value="${state.currentUser?.id}" selected>
-                        👤 Berkas Saya (${state.currentUser?.name})
+                        ðŸ‘¤ Berkas Saya (${state.currentUser?.name})
                       </option>
                     `}
                   </select>
@@ -5151,11 +4750,11 @@
                   class="btn-primary" 
                   style="width: auto; height: 36px; padding: 0 12px; font-size: 11px; background: #0284c7; display: flex; align-items: center; gap: 6px; border-radius: 10px; text-decoration: none; border: none; font-weight: 700; color: white;"
                 >
-                  🔄 <span class="no-print">Sinkron Cloud</span>
+                  ðŸ”„ <span class="no-print">Sinkron Cloud</span>
                 </button>
 
                 <button type="button" onclick="handleSuperAdminButtonClick()" title="Super Admin" style="width: 36px; height: 36px; border-radius: 10px; background: #f8fafc; border: 1.5px solid #cbd5e1; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 17px; transition: all 0.15s ease;" onmouseover="this.style.background='#ecfdf5'; this.style.borderColor='#10b981'; this.style.color='#047857'; this.style.transform='scale(1.06)';" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.color='#475569'; this.style.transform='scale(1)';">
-                  ⚙️
+                  âš™ï¸
                 </button>
               </div>
             </header>
@@ -5176,8 +4775,8 @@
     // MODAL EDIT/TAMBAH USER (ID, NAMA, JABATAN, ROLE)
     function renderUserModal(modal) {
       const isEdit = modal.isEdit;
-      const title = isEdit ? '✏️ Edit Akun Pengguna / Guru' : '➕ Tambah Guru / Pengguna Baru';
-      const submitText = isEdit ? '💾 Simpan Perubahan Akun' : '➕ Tambah Akun Baru';
+      const title = isEdit ? 'âœï¸ Edit Akun Pengguna / Guru' : 'âž• Tambah Guru / Pengguna Baru';
+      const submitText = isEdit ? 'ðŸ’¾ Simpan Perubahan Akun' : 'âž• Tambah Akun Baru';
 
       return `
         <div class="modal-overlay" onclick="closeUserModal()">
@@ -5240,14 +4839,14 @@
                   class="form-select" 
                   style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; color: #0f172a; width: 100%; outline: none;"
                 >
-                  <option value="guru" ${modal.role === 'guru' ? 'selected' : ''}>👨‍🏫 GURU (Tenaga Pendidik / Ternilai)</option>
-                  <option value="kepsek" ${modal.role === 'kepsek' ? 'selected' : ''}>🏫 KEPALA SEKOLAH (Evaluator / Penilai Utama)</option>
+                  <option value="guru" ${modal.role === 'guru' ? 'selected' : ''}>ðŸ‘¨â€ðŸ« GURU (Tenaga Pendidik / Ternilai)</option>
+                  <option value="kepsek" ${modal.role === 'kepsek' ? 'selected' : ''}>ðŸ« KEPALA SEKOLAH (Evaluator / Penilai Utama)</option>
                 </select>
               </div>
 
               <div style="display: flex; gap: 10px; justify-content: flex-end; padding-top: 14px; border-top: 1px solid #e2e8f0;">
                 <button type="button" onclick="closeUserModal()" class="btn-primary" style="width: auto; background: #64748b; padding: 10px 20px; font-size: 12px;">
-                  ❌ Batal
+                  âŒ Batal
                 </button>
                 <button type="submit" class="btn-primary" style="width: auto; background: #059669; padding: 10px 24px; font-size: 12px;">
                   ${submitText}
@@ -5301,14 +4900,14 @@
               <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                   <button type="button" onclick="closePreview()" class="btn-preview-back" style="display: inline-flex; align-items: center; gap: 6px; background: #dc2626; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; box-shadow: 0 4px 12px rgba(220,38,38,0.4); flex-shrink: 0;">
-                    ⬅️ KEMBALI
+                    â¬…ï¸ KEMBALI
                   </button>
                   <span style="font-size: 11px; font-weight: 800; color: #ffffff; text-transform: uppercase; background: ${isWord ? '#0284c7' : isExcel ? '#059669' : isPdf ? '#dc2626' : isImage ? '#7c3aed' : '#475569'}; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">
-                    ${isWord ? '📝 DOCX' : isExcel ? '📊 EXCEL' : isPdf ? '📕 PDF' : isImage ? '🖼️ GAMBAR' : isPpt ? '📽️ PPT' : ext.toUpperCase()}
+                    ${isWord ? 'ðŸ“ DOCX' : isExcel ? 'ðŸ“Š EXCEL' : isPdf ? 'ðŸ“• PDF' : isImage ? 'ðŸ–¼ï¸ GAMBAR' : isPpt ? 'ðŸ“½ï¸ PPT' : ext.toUpperCase()}
                   </span>
                 </div>
                 <button type="button" onclick="closePreview()" title="Tutup Previu" style="background: #ef4444; border: 1px solid #f87171; color: white; font-size: 18px; font-weight: 900; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(239,68,68,0.3);">
-                  ✕
+                  âœ•
                 </button>
               </div>
 
@@ -5320,15 +4919,15 @@
 
               <!-- BARIS 3: TOMBOL AKSI CEPAT (GDRIVE, CETAK, UNDUH) -->
               <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; width: 100%; padding-top: 2px;">
-                <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #0284c7; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">📂 Folder GDrive</a>
+                <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #0284c7; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">ðŸ“‚ Folder GDrive</a>
                 ${directDriveViewUrl ? `
-                  <a href="${directDriveViewUrl}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">🖨️ Buka di Drive</a>
+                  <a href="${directDriveViewUrl}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">ðŸ–¨ï¸ Buka di Drive</a>
                 ` : isPdf ? `
-                  <a href="${fileApiUrl}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">🖨️ Print PDF</a>
+                  <a href="${fileApiUrl}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">ðŸ–¨ï¸ Print PDF</a>
                 ` : isImage ? `
-                  <button type="button" onclick="printCanvasPreview()" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; border-radius: 6px; font-weight: 700; white-space: nowrap;">🖨️ Cetak</button>
+                  <button type="button" onclick="printCanvasPreview()" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; border-radius: 6px; font-weight: 700; white-space: nowrap;">ðŸ–¨ï¸ Cetak</button>
                 ` : ''}
-                <a href="${directDriveViewUrl || downloadUrl}" download="${fileName}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #059669; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">⬇️ Download</a>
+                <a href="${directDriveViewUrl || downloadUrl}" download="${fileName}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #059669; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">â¬‡ï¸ Download</a>
               </div>
             </div>
 
@@ -5339,17 +4938,17 @@
                 </div>
               ` : isImage ? `
                 <div style="background: #1e293b; padding: 10px 16px; display: flex; justify-content: center; align-items: center; gap: 8px; border-bottom: 1px solid #334155; flex-wrap: wrap;">
-                  <button type="button" onclick="closePreview()" class="btn-primary" style="width:auto; padding:5px 14px; font-size:11px; background:#dc2626; font-weight:800;">⬅️ Kembali</button>
-                  <button type="button" onclick="adjustCanvasZoom(0.25)" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#2563eb;" title="Perbesar (+25%)">🔍 Zoom (+)</button>
-                  <button type="button" onclick="adjustCanvasZoom(-0.25)" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#2563eb;" title="Perkecil (-25%)">🔍 Zoom (-)</button>
-                  <button type="button" onclick="rotateCanvasImage()" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#4f46e5;" title="Putar 90 Derajat">🔄 Putar (90°)</button>
-                  <button type="button" onclick="resetCanvasView()" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#475569;" title="Normal">📐 Normal (100%)</button>
-                  <button type="button" onclick="printCanvasPreview()" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#059669;" title="Cetak Gambar">🖨️ Cetak</button>
+                  <button type="button" onclick="closePreview()" class="btn-primary" style="width:auto; padding:5px 14px; font-size:11px; background:#dc2626; font-weight:800;">â¬…ï¸ Kembali</button>
+                  <button type="button" onclick="adjustCanvasZoom(0.25)" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#2563eb;" title="Perbesar (+25%)">ðŸ” Zoom (+)</button>
+                  <button type="button" onclick="adjustCanvasZoom(-0.25)" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#2563eb;" title="Perkecil (-25%)">ðŸ” Zoom (-)</button>
+                  <button type="button" onclick="rotateCanvasImage()" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#4f46e5;" title="Putar 90 Derajat">ðŸ”„ Putar (90Â°)</button>
+                  <button type="button" onclick="resetCanvasView()" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#475569;" title="Normal">ðŸ“ Normal (100%)</button>
+                  <button type="button" onclick="printCanvasPreview()" class="btn-primary" style="width:auto; padding:5px 12px; font-size:11px; background:#059669;" title="Cetak Gambar">ðŸ–¨ï¸ Cetak</button>
                 </div>
                 <div id="image-canvas-container" style="padding: 24px; text-align: center; background: #0f172a; min-height: 75vh; max-height: 75vh; overflow: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
                   <canvas id="image-preview-canvas" style="display:none; margin: auto 0; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 8px; max-width: 95%; background: white;"></canvas>
                   <img id="image-preview-fallback" style="display:none; margin: auto 0; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 8px; max-width: 95%; height: auto;" />
-                  <div id="image-canvas-loading" style="color: #38bdf8; font-size: 13px; font-weight: 700; margin: auto 0; padding: 20px;">⏳ Memuat gambar ke canvas...</div>
+                  <div id="image-canvas-loading" style="color: #38bdf8; font-size: 13px; font-weight: 700; margin: auto 0; padding: 20px;">â³ Memuat gambar ke canvas...</div>
                 </div>
               ` : isPdf ? `
                 <div id="pdf-canvas-container" style="width: 100%; height: 100%; min-height: 80vh; max-height: 80vh; overflow-y: auto; text-align: center; background: #334155; padding: 20px 0;"></div>
@@ -5363,14 +4962,14 @@
                 </div>
               ` : `
                 <div style="text-align: center; color: white; padding: 60px 20px 80px; background: #1e293b;">
-                  <div style="font-size: 56px; margin-bottom: 16px;">📄</div>
+                  <div style="font-size: 56px; margin-bottom: 16px;">ðŸ“„</div>
                   <h4 style="font-size: 17px; font-weight: 800; margin-bottom: 8px; color: #f8fafc;">Berkas (${ext.toUpperCase()})</h4>
                   <p style="font-size: 13px; color: #94a3b8; margin-bottom: 6px; word-break: break-all;"><strong>${fileName}</strong></p>
                   <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 24px;">Format berkas ${ext.toUpperCase()} tersimpan di Google Drive sekolah.</p>
                   <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
-                    <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; width:auto; padding:10px 22px; font-size:13px; background:#0284c7; text-decoration:none; font-weight:800; border-radius:10px;">📂 Buka di Google Drive</a>
-                    <a href="${downloadUrl}" download="${fileName}" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; width:auto; padding:10px 22px; font-size:13px; background:#059669; text-decoration:none; font-weight:800; border-radius:10px;">⬇️ Unduh Berkas</a>
-                    <button type="button" onclick="closePreview()" style="display:inline-flex; align-items:center; gap:6px; background:#dc2626; color:white; border:none; padding:10px 22px; font-size:13px; font-weight:800; border-radius:10px; cursor:pointer;">⬅️ Kembali ke Aplikasi</button>
+                    <a href="${gdriveFolderHref}" target="_blank" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; width:auto; padding:10px 22px; font-size:13px; background:#0284c7; text-decoration:none; font-weight:800; border-radius:10px;">ðŸ“‚ Buka di Google Drive</a>
+                    <a href="${downloadUrl}" download="${fileName}" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; width:auto; padding:10px 22px; font-size:13px; background:#059669; text-decoration:none; font-weight:800; border-radius:10px;">â¬‡ï¸ Unduh Berkas</a>
+                    <button type="button" onclick="closePreview()" style="display:inline-flex; align-items:center; gap:6px; background:#dc2626; color:white; border:none; padding:10px 22px; font-size:13px; font-weight:800; border-radius:10px; cursor:pointer;">â¬…ï¸ Kembali ke Aplikasi</button>
                   </div>
                 </div>
               `}
@@ -5379,7 +4978,7 @@
             <!-- TOMBOL KEMBALI MELAYANG KHUSUS HP (STICKY BOTTOM PILL) -->
             <div class="mobile-preview-sticky-bar no-print" style="position: fixed; bottom: 18px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; z-index: 1000000; pointer-events: none;">
               <button type="button" onclick="closePreview()" style="pointer-events: auto; background: #dc2626; color: white; border: 2px solid #ffffff; border-radius: 9999px; padding: 12px 28px; font-size: 13px; font-weight: 900; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                ⬅️ KEMBALI KE APLIKASI
+                â¬…ï¸ KEMBALI KE APLIKASI
               </button>
             </div>
           </div>
@@ -5392,7 +4991,7 @@
       return `
         <div id="super-admin-trigger" class="no-print" style="position:fixed; top:18px; right:24px; z-index:99999;">
           <button type="button" onclick="handleSuperAdminButtonClick()" title="Super Admin" style="width: 38px; height: 38px; border-radius: 10px; background: #1e293b; border: 1.5px solid #475569; color: #cbd5e1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: all 0.15s ease;" onmouseover="this.style.borderColor='#10b981'; this.style.color='#10b981'; this.style.transform='scale(1.08)';" onmouseout="this.style.borderColor='#475569'; this.style.color='#cbd5e1'; this.style.transform='scale(1)';">
-            ⚙️
+            âš™ï¸
           </button>
         </div>
       `;
@@ -5404,7 +5003,7 @@
           <div class="modal-content" style="max-width: 440px; height: auto; border-radius: 20px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); overflow: hidden;" onclick="event.stopPropagation()">
             <div class="modal-header" style="background: #0f172a; padding: 18px 22px; border-bottom: 2px solid #f59e0b; display:flex; justify-content:space-between; align-items:center;">
               <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">👑</span>
+                <span style="font-size:24px;">ðŸ‘‘</span>
                 <div>
                   <h3 style="margin:0; font-size:15px; font-weight:900; color:#ffffff;">Akses Login Super Admin</h3>
                   <p style="margin:2px 0 0; font-size:11px; color:#f59e0b; font-weight:700;">Multi-Tenant Master Control</p>
@@ -5418,13 +5017,13 @@
                   <label class="form-label" style="font-size:11px; font-weight:800; color:#334155;">Password Super Admin:</label>
                   <div style="position:relative; display:flex; align-items:center;">
                     <input type="password" id="sa-auth-password" class="form-input" placeholder="Masukkan kata sandi" required autofocus style="padding-right:40px; font-size:13px;" />
-                    <button type="button" onclick="toggleSaAuthPassword()" style="position:absolute; right:10px; background:none; border:none; cursor:pointer; font-size:16px; color:#64748b;">👁️</button>
+                    <button type="button" onclick="toggleSaAuthPassword()" style="position:absolute; right:10px; background:none; border:none; cursor:pointer; font-size:16px; color:#64748b;">ðŸ‘ï¸</button>
                   </div>
                   <p id="sa-auth-error" style="display:none; color:#ef4444; font-size:11px; font-weight:700; margin-top:6px;">Password salah! Silakan coba lagi.</p>
                 </div>
                 <div style="display:flex; gap:10px; margin-top:20px;">
                   <button type="button" onclick="closeSuperAdminAuthModal()" class="btn-primary" style="flex:1; background:#64748b; padding:12px;">Batal</button>
-                  <button type="submit" class="btn-primary" style="flex:2; background:#d97706; padding:12px;">🔓 Masuk Super Admin</button>
+                  <button type="submit" class="btn-primary" style="flex:2; background:#d97706; padding:12px;">ðŸ”“ Masuk Super Admin</button>
                 </div>
               </form>
             </div>
@@ -5447,7 +5046,7 @@
             <!-- Header -->
             <div class="modal-header" style="background: #0f172a; padding: 18px 24px; border-bottom: 2px solid #f59e0b; display:flex; justify-content:space-between; align-items:center;">
               <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:26px;">👑</span>
+                <span style="font-size:26px;">ðŸ‘‘</span>
                 <div>
                   <h2 style="margin:0; font-size:17px; font-weight:900; color:#ffffff;">Panel Super Admin - Kelola Data Sekolah</h2>
                   <p style="margin:2px 0 0; font-size:11px; color:#f59e0b; font-weight:700;">Multi-Tenant E-PKKS 2026 &bull; Hak Akses Master Data & Kredensial</p>
@@ -5455,10 +5054,10 @@
               </div>
               <div style="display:flex; gap:10px; align-items:center;">
                 <button type="button" onclick="openSuperAdminSchoolModal()" class="btn-primary" style="background:#059669; padding:9px 18px; font-size:12px; border-radius:10px; width:auto; font-weight:800;">
-                  ➕ Tambah Sekolah
+                  âž• Tambah Sekolah
                 </button>
                 <button type="button" onclick="logoutSuperAdmin()" class="btn-primary" style="background:#475569; padding:9px 14px; font-size:12px; border-radius:10px; width:auto; font-weight:800;" title="Logout Super Admin">
-                  🔒 Logout
+                  ðŸ”’ Logout
                 </button>
                 <button type="button" onclick="closeSuperAdminDashboard()" style="background:none; border:none; color:#cbd5e1; font-size:26px; cursor:pointer; line-height:1; margin-left:8px;">&times;</button>
               </div>
@@ -5467,7 +5066,7 @@
             <!-- Toolbar / Search Bar -->
             <div style="padding: 14px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div style="position:relative; flex:1; max-width:440px;">
-                <input type="text" id="sa-search-school" value="${state.superAdminSearchQuery || ''}" oninput="filterSuperAdminSchools(this.value)" placeholder="🔍 Cari Nama Sekolah, NPSN, atau Kepala Sekolah..." class="form-input" style="padding: 9px 14px; font-size:12.5px; border-radius:10px;" />
+                <input type="text" id="sa-search-school" value="${state.superAdminSearchQuery || ''}" oninput="filterSuperAdminSchools(this.value)" placeholder="ðŸ” Cari Nama Sekolah, NPSN, atau Kepala Sekolah..." class="form-input" style="padding: 9px 14px; font-size:12.5px; border-radius:10px;" />
               </div>
               <div style="font-size:12.5px; font-weight:800; color:#475569;">
                 Total Sekolah: <span style="color:#059669; font-size:14px; font-weight:900;">${filtered.length}</span> dari ${state.superAdminSchools.length}
@@ -5478,7 +5077,7 @@
             <div style="flex:1; overflow-y:auto; padding:20px 24px; background:#ffffff;">
               ${filtered.length === 0 ? `
                 <div style="text-align:center; padding:60px 20px; color:#64748b;">
-                  <div style="font-size:48px; margin-bottom:12px;">🏫</div>
+                  <div style="font-size:48px; margin-bottom:12px;">ðŸ«</div>
                   <h4 style="font-size:16px; font-weight:800; color:#0f172a;">Tidak Ada Data Sekolah</h4>
                   <p style="font-size:12px; margin-top:4px;">${state.superAdminSchools.length === 0 ? 'Belum ada sekolah terdaftar. Klik tombol "Tambah Sekolah" untuk mendaftarkan sekolah baru.' : 'Tidak ditemukan sekolah yang sesuai dengan pencarian.'}</p>
                 </div>
@@ -5506,8 +5105,8 @@
                         </td>
                         <td style="padding:12px 12px;">
                           <div style="display:flex; align-items:center; gap:8px;">
-                            <span id="sa-pwd-text-${idx}" data-real="${s.password}" data-shown="false" style="font-family:monospace; font-weight:700; color:#475569; background:#f1f5f9; padding:4px 8px; border-radius:6px; border:1px solid #e2e8f0;">••••••••</span>
-                            <button type="button" id="sa-pwd-btn-${idx}" onclick="toggleSchoolPwdRow(${idx})" style="background:none; border:none; cursor:pointer; font-size:14px;" title="Lihat/Sembunyikan Password">👁️</button>
+                            <span id="sa-pwd-text-${idx}" data-real="${s.password}" data-shown="false" style="font-family:monospace; font-weight:700; color:#475569; background:#f1f5f9; padding:4px 8px; border-radius:6px; border:1px solid #e2e8f0;">â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢</span>
+                            <button type="button" id="sa-pwd-btn-${idx}" onclick="toggleSchoolPwdRow(${idx})" style="background:none; border:none; cursor:pointer; font-size:14px;" title="Lihat/Sembunyikan Password">ðŸ‘ï¸</button>
                           </div>
                         </td>
                         <td style="padding:12px 12px; font-weight:700; color:#334155;">
@@ -5516,13 +5115,13 @@
                         <td style="padding:12px 12px; text-align:center;">
                           <div style="display:inline-flex; gap:6px;">
                             <button type="button" onclick='superAdminEnterSchool("${s.npsn}", "${s.nama.replace(/"/g, '&quot;')}")' class="btn-xs btn-download" style="background:#059669; padding:6px 10px; font-size:11px;" title="Masuk ke portal sekolah ini">
-                              🚀 Masuk Portal
+                              ðŸš€ Masuk Portal
                             </button>
                             <button type="button" onclick='openSuperAdminSchoolModal(${JSON.stringify(s).replace(/'/g, "&apos;")})' class="btn-xs btn-view" style="background:#0284c7; padding:6px 10px; font-size:11px;" title="Ubah data sekolah">
-                              ✏️ Ubah
+                              âœï¸ Ubah
                             </button>
                             <button type="button" onclick='deleteSuperAdminSchool("${s.npsn}", "${s.nama.replace(/"/g, '&quot;')}")' class="btn-xs btn-delete" style="background:#ef4444; padding:6px 10px; font-size:11px;" title="Hapus sekolah">
-                              🗑️ Hapus
+                              ðŸ—‘ï¸ Hapus
                             </button>
                           </div>
                         </td>
@@ -5545,7 +5144,7 @@
           <div class="modal-content" style="max-width: 520px; height: auto; border-radius: 20px; background: #ffffff; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); overflow: hidden;" onclick="event.stopPropagation()">
             <div class="modal-header" style="background: #0f172a; padding: 16px 20px; border-bottom: 2px solid #f59e0b; display:flex; justify-content:space-between; align-items:center;">
               <h3 style="margin:0; font-size:15px; font-weight:900; color:#ffffff;">
-                ${isEdit ? '✏️ Ubah Data Sekolah' : '➕ Tambah Sekolah Baru'}
+                ${isEdit ? 'âœï¸ Ubah Data Sekolah' : 'âž• Tambah Sekolah Baru'}
               </h3>
               <button type="button" onclick="closeSuperAdminSchoolModal()" style="background:none; border:none; color:#94a3b8; font-size:22px; cursor:pointer; line-height:1;">&times;</button>
             </div>
@@ -5576,7 +5175,7 @@
 
                 <div style="display:flex; gap:10px;">
                   <button type="button" onclick="closeSuperAdminSchoolModal()" class="btn-primary" style="flex:1; background:#64748b; padding:12px;">Batal</button>
-                  <button type="submit" class="btn-primary" style="flex:2; background:#059669; padding:12px;">💾 Simpan Data Sekolah</button>
+                  <button type="submit" class="btn-primary" style="flex:2; background:#059669; padding:12px;">ðŸ’¾ Simpan Data Sekolah</button>
                 </div>
               </form>
             </div>
