@@ -463,8 +463,15 @@
     const DEFAULT_GDRIVE_FOLDER_ID = "1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x";
     const DEFAULT_GDRIVE_EXEC_URL = "https://script.google.com/macros/s/AKfycbykNKnIhlwXTr-u6OX7rBbAmyyWq1J3OKtJUOQ5ocg1yowiyswFIUEByRbipMQN9qBM/exec";
 
-    // PEMETAAN ID GOOGLE DRIVE (Mulai dari 0 / kosong sesuai isi Google Drive terbaru)
-    const KNOWN_GDRIVE_IDS = {};
+    // PEMETAAN ID GOOGLE DRIVE SESUAI ISI FOLDER GOOGLE DRIVE SAAT INI
+    const KNOWN_GDRIVE_IDS = {
+      "Hidayat_20261012013107_Inventaris_Sarana_dan_prasarana_2026.pdf": "1ZA7Lp2Nu4IJYexOqkeCjh4qm9NXQBeKc",
+      "Hidayat_20261012013259_Analisis_Kebutuhan_2026.pdf": "1vbTj00796Dl1DyADLd2wJg3Ffhsx2Qe4",
+      "Hidayat_20261012013521_Inventaris_Modal.pdf": "1F7ZiXFHknqQcIP6BebpLV2stPp3PhTAS",
+      "Hidayat_20261012013806_SOP_Pemiliharan_Sarpras.pdf": "1YwRzjQmBWkU9YvHKnYfFJ4kWeigR70lh",
+      "Hidayat_20261012013911_Jadwal_Pemiliharaan__Sarpras.pdf": "1bMvYrlLqnRb5d3ZxWXmkGm-oBm-HKXvt",
+      "Hidayat_20261012013956_Jurnal_Penggunaan_LAB_dan_Perpustakaan.pdf": "1pPUvWkLgLh5mQU4ppMPRcmbT7O1yU_Sn"
+    };
 
     function resolveGdriveFileMeta(file) {
       if (!file) return null;
@@ -847,7 +854,7 @@
           saveLocalFileMeta(npsn, metaObj);
         }
 
-        // 1. Unggah & simpan fisik berkas LANGSUNG ke Google Drive (BUKAN ke Firebase)
+        // 1. Unggah & simpan fisik berkas LANGSUNG ke Google Drive
         const dataUrl = await readFileAsDataUrl(file);
         if (dataUrl && folderId && DEFAULT_GDRIVE_EXEC_URL) {
           const b64Parts = String(dataUrl).split(',');
@@ -872,16 +879,38 @@
           });
         }
 
-        // 2. Gunakan Firebase (/pkks_gdrive_files_v4) HANYA sebagai jembatan sinkronisasi metadata Google Drive
+        // 2. Simpan jembatan metadata (/pkks_gdrive_files_v4) & jembatan biner previu lintas browser (/pkks_files_v4)
         if (!isLogo) {
-          await originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}/${safeFileId}.json`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(metaObj)
-          }).catch(() => {});
+          const putPromises = [
+            originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}/${safeFileId}.json`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(metaObj)
+            }).catch(() => {})
+          ];
+
+          if (dataUrl && dataUrl.length < 18000000) {
+            putPromises.push(
+              originalFetch(`${baseUrl}/pkks_files_v4/${safeNpsn}/${safeFileId}.json`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: fId,
+                  fileKey: fId,
+                  name: filename,
+                  savedName: filename,
+                  mimeType: metaObj.mimeType,
+                  dataUrl: dataUrl,
+                  timestamp: Date.now()
+                })
+              }).catch(() => {})
+            );
+          }
+
+          await Promise.allSettled(putPromises);
         }
 
-        console.log("[Jembatan Firebase -> GDrive] Metadata disinkronkan via Firebase & berkas diunggah ke GDrive:", filename);
+        console.log("[Jembatan Firebase -> GDrive] Metadata & previu lintas browser disinkronkan:", filename);
         return metaObj;
       } catch (e) {
         console.warn("[Jembatan Firebase -> GDrive] Notice:", e);
@@ -946,11 +975,12 @@
           }
         } catch(e) {}
 
-        // 2. Delete from pkks_gdrive_files_v4, pkks_file_meta, and pkks_files in Firebase
+        // 2. Delete from pkks_gdrive_files_v4, pkks_files_v4, pkks_file_meta, and pkks_files in Firebase
         keysToDelete.forEach(sKey => {
           if (!sKey) return;
           delPromises.push(
             originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}/${sKey}.json`, { method: 'DELETE' }),
+            originalFetch(`${baseUrl}/pkks_files_v4/${safeNpsn}/${sKey}.json`, { method: 'DELETE' }),
             originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${sKey}.json`, { method: 'DELETE' }),
             originalFetch(`${baseUrl}/pkks_files/${safeNpsn}/${sKey}.json`, { method: 'DELETE' })
           );
@@ -1019,7 +1049,53 @@
     }
 
     async function fetchFileBlobFromFirebase(npsn, fileObjOrName, firebaseUrl) {
-      // Firebase hanya menjadi jembatan metadata (tidak menyimpan file biner)
+      try {
+        npsn = npsn || (window.state && window.state.schoolNpsn) || localStorage.getItem('pkks_school_npsn') || '20231556';
+        const s = getSchoolSettings(npsn);
+        const baseUrl = normalizeFirebaseUrl(firebaseUrl || s.appsScriptUrl);
+        const safeNpsn = toFirebaseKey(npsn);
+
+        const candidateKeys = new Set();
+        let targetName = '';
+
+        if (fileObjOrName && typeof fileObjOrName === 'object') {
+          if (fileObjOrName.id) candidateKeys.add(toFirebaseKey(fileObjOrName.id));
+          if (fileObjOrName.fileKey) candidateKeys.add(toFirebaseKey(fileObjOrName.fileKey));
+          targetName = fileObjOrName.savedName || fileObjOrName.name || '';
+        } else if (typeof fileObjOrName === 'string') {
+          targetName = fileObjOrName;
+          candidateKeys.add(toFirebaseKey(fileObjOrName));
+        }
+
+        // Cari juga ID dari registri lokal berdasarkan nama berkas
+        if (targetName) {
+          const localMap = getLocalFileMetaMap(npsn);
+          Object.values(localMap).forEach(m => {
+            if (m && (m.savedName === targetName || m.name === targetName || m.originalName === targetName)) {
+              if (m.id) candidateKeys.add(toFirebaseKey(m.id));
+              if (m.fileKey) candidateKeys.add(toFirebaseKey(m.fileKey));
+            }
+          });
+        }
+
+        for (const sKey of candidateKeys) {
+          if (!sKey) continue;
+          const res = await originalFetch(`${baseUrl}/pkks_files_v4/${safeNpsn}/${sKey}.json`).catch(() => null);
+          if (res && res.ok) {
+            const rec = await res.json().catch(() => null);
+            if (rec && rec.dataUrl) {
+              const blob = dataUrlToBlob(rec.dataUrl, rec.mimeType || 'application/octet-stream');
+              if (blob && blob.size > 0) {
+                await PkksFileDB.set(sKey, blob);
+                if (targetName) await PkksFileDB.set(targetName, blob);
+                return blob;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[Firebase] fetchFileBlobFromFirebase notice:", e);
+      }
       return null;
     }
 
@@ -3374,8 +3450,12 @@
           const fileKey = file.fileKey || file.id;
           blob = await PkksFileDB.get(fileKey) || await PkksFileDB.get(file.savedName) || await PkksFileDB.get(file.name);
         }
+        if (!blob) {
+          const npsn = state.schoolNpsn || sessionStorage.getItem('pkks_school_npsn') || '20231556';
+          blob = await fetchFileBlobFromFirebase(npsn, file);
+        }
 
-        if (blob && window.docx && typeof window.docx.renderAsync === 'function') {
+        if (blob && blob.size > 0 && window.docx && typeof window.docx.renderAsync === 'function') {
           container.innerHTML = '';
           await window.docx.renderAsync(blob, container, null, {
             inWrapper: true,
@@ -3424,8 +3504,12 @@
           const fileKey = file.fileKey || file.id;
           blob = await PkksFileDB.get(fileKey) || await PkksFileDB.get(file.savedName) || await PkksFileDB.get(file.name);
         }
+        if (!blob) {
+          const npsn = state.schoolNpsn || sessionStorage.getItem('pkks_school_npsn') || '20231556';
+          blob = await fetchFileBlobFromFirebase(npsn, file);
+        }
 
-        if (blob && window.XLSX) {
+        if (blob && blob.size > 0 && window.XLSX) {
           const buffer = await blob.arrayBuffer();
           const workbook = XLSX.read(buffer, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
@@ -3465,8 +3549,12 @@
         }
         if (!textContent) {
           const fileKey = file.fileKey || file.id;
-          const blob = await PkksFileDB.get(fileKey) || await PkksFileDB.get(file.savedName) || await PkksFileDB.get(file.name);
-          if (blob) {
+          let blob = await PkksFileDB.get(fileKey) || await PkksFileDB.get(file.savedName) || await PkksFileDB.get(file.name);
+          if (!blob) {
+            const npsn = state.schoolNpsn || sessionStorage.getItem('pkks_school_npsn') || '20231556';
+            blob = await fetchFileBlobFromFirebase(npsn, file);
+          }
+          if (blob && blob.size > 0) {
             textContent = await blob.text();
           }
         }
@@ -3496,24 +3584,21 @@
       }
 
       resolveGdriveFileMeta(file);
-      const ext = (file.name || file.savedName || '').split('.').pop().toLowerCase();
-      const isDoc = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt'].includes(ext);
+      const npsn = state.schoolNpsn || sessionStorage.getItem('pkks_school_npsn') || localStorage.getItem('pkks_school_npsn') || '20231556';
 
-      // Priority 1: Google Drive high-fidelity interactive preview for documents
-      if (isDoc && file.drivePreviewUrl) {
-        openPreview(file);
-        return;
-      }
-
-      const npsn = state.schoolNpsn || localStorage.getItem('pkks_school_npsn') || '20231556';
-
-      // Priority 2: Check IndexedDB (instant, zero network latency, works offline)
+      // Priority 1: Check IndexedDB (instant, zero network latency)
       const fileKey = file.fileKey || file.id;
       let blob = await PkksFileDB.get(fileKey);
       if (!blob && file.id) blob = await PkksFileDB.get(file.id);
       if (!blob && file.savedName) blob = await PkksFileDB.get(file.savedName);
       if (!blob && file.name) blob = await PkksFileDB.get(file.name);
       if (!blob && file.id) blob = await PkksFileDB.get(file.id + '_preview');
+
+      // Priority 2: Fetch binary blob from Firebase Cloud (/pkks_files_v4) when opened on another browser/device
+      if (!blob || blob.size === 0) {
+        if (state.showToast) state.showToast('⏳ Memuat berkas dari Cloud...');
+        blob = await fetchFileBlobFromFirebase(npsn, file);
+      }
 
       if (blob && blob.size > 0) {
         const blobUrl = URL.createObjectURL(blob);
@@ -3522,15 +3607,16 @@
         return;
       }
 
-      // Priority 3: Direct file previewUrl or url if present
-      if (file.previewUrl && (file.previewUrl.startsWith('data:') || file.previewUrl.startsWith('blob:') || file.previewUrl.startsWith('http'))) {
-        const previewObj = Object.assign({}, file, { url: file.previewUrl });
-        openPreview(previewObj);
+      // Priority 3: Google Drive interactive preview if available
+      if (file.drivePreviewUrl) {
+        openPreview(file);
         return;
       }
 
-      if (file.drivePreviewUrl) {
-        openPreview(file);
+      // Priority 4: Direct file previewUrl or url if present
+      if (file.previewUrl && (file.previewUrl.startsWith('data:') || file.previewUrl.startsWith('blob:') || file.previewUrl.startsWith('http'))) {
+        const previewObj = Object.assign({}, file, { url: file.previewUrl });
+        openPreview(previewObj);
         return;
       }
 
@@ -3539,7 +3625,7 @@
         return;
       }
 
-      // Priority 4: Fallback query via local API or Google Drive
+      // Priority 5: Fallback query via local API or Google Drive
       const rawName = file.savedName || file.name || '';
       const fallbackUrl = '/api/pdf-bytes?npsn=' + npsn + '&file=' + encodeURIComponent(rawName);
       const previewObj = Object.assign({}, file, { url: fallbackUrl });
@@ -3559,17 +3645,17 @@
       const fileName = file.name || file.savedName || '';
       const rawName = file.savedName || file.name || '';
       const ext = fileName.split('.').pop().toLowerCase();
-      const npsn = state.schoolNpsn || '20231556';
+      const npsn = state.schoolNpsn || sessionStorage.getItem('pkks_school_npsn') || '20231556';
       const fileApiUrl = file.url || ('/api/pdf-bytes?npsn=' + npsn + '&file=' + encodeURIComponent(rawName));
 
-      // If document is displayed via Google Drive preview iframe, no client DOM rendering needed
-      if (file.drivePreviewUrl && ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt'].includes(ext)) {
+      // If document is displayed via Google Drive preview iframe (when no local/cloud blob is active), no client DOM rendering needed
+      if (!file.isBlobUrl && file.drivePreviewUrl && ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt', 'pdf'].includes(ext)) {
         return;
       }
 
       setTimeout(() => {
         if (ext === 'pdf') {
-          if (!file.drivePreviewUrl) {
+          if (file.isBlobUrl || !file.drivePreviewUrl) {
             renderPdfCanvas(fileApiUrl, 'pdf-canvas-container');
           }
         } else if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) {
@@ -3634,8 +3720,17 @@
       };
 
       img.onload = onImageLoaded;
-      img.onerror = function(err) {
-        console.warn("Failed to load image on primary canvas src, attempting fallback:", err);
+      img.onerror = async function(err) {
+        console.warn("Failed to load image on primary canvas src, attempting Firebase/fallback:", err);
+        if (state.previewFile && !imgUrl.startsWith('blob:')) {
+          const npsn = state.schoolNpsn || sessionStorage.getItem('pkks_school_npsn') || '20231556';
+          const fbBlob = await fetchFileBlobFromFirebase(npsn, state.previewFile);
+          if (fbBlob && fbBlob.size > 0) {
+            const bUrl = URL.createObjectURL(fbBlob);
+            img.src = bUrl;
+            return;
+          }
+        }
         const fallbackImg = document.getElementById('image-preview-fallback');
         if (fallbackImg && imgUrl && !imgUrl.includes('/api/pdf-bytes') && !imgUrl.startsWith('data:image/')) {
           fallbackImg.src = imgUrl;
@@ -3771,7 +3866,7 @@
       }
     };
 
-    // DIRECT HIGH-PRECISION PDF CANVAS RENDERER (WITH HYBRID BLOB IFRAME FALLBACK)
+    // DIRECT HIGH-PRECISION PDF CANVAS RENDERER (WITH CLOUD BLOB & GDRIVE IFRAME FALLBACK)
     async function renderPdfCanvas(url, containerId) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -3784,12 +3879,37 @@
       }
 
       try {
-        const res = await fetch(fullUrl, { cache: 'no-cache', credentials: 'omit' });
-        if (!res.ok) throw new Error("HTTP Error " + res.status + " " + res.statusText);
-        const arrayBuffer = await res.arrayBuffer();
+        let arrayBuffer = null;
+        try {
+          const res = await fetch(fullUrl, { cache: 'no-cache', credentials: 'omit' });
+          if (res.ok) {
+            arrayBuffer = await res.arrayBuffer();
+          }
+        } catch (fetchErr) {
+          console.warn("Initial PDF fetch notice:", fetchErr);
+        }
 
+        // If empty (0 bytes) or failed, attempt to fetch binary from Firebase Cloud (/pkks_files_v4)
         if (!arrayBuffer || arrayBuffer.byteLength === 0) {
-          throw new Error("File PDF kosong (0 bytes). Silakan unggah ulang berkas.");
+          if (state.previewFile) {
+            const npsn = state.schoolNpsn || sessionStorage.getItem('pkks_school_npsn') || '20231556';
+            const fbBlob = await fetchFileBlobFromFirebase(npsn, state.previewFile);
+            if (fbBlob && fbBlob.size > 0) {
+              arrayBuffer = await fbBlob.arrayBuffer();
+            }
+          }
+        }
+
+        // If still empty, check if Google Drive Preview URL is available
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          if (state.previewFile) {
+            resolveGdriveFileMeta(state.previewFile);
+            if (state.previewFile.drivePreviewUrl) {
+              container.innerHTML = `<iframe src="${state.previewFile.drivePreviewUrl}" width="100%" height="100%" style="border:none; min-height: 80vh; width: 100%; display: block; background: white;" allow="autoplay"></iframe>`;
+              return;
+            }
+          }
+          throw new Error("Berkas sedang disinkronkan ke Cloud. Silakan klik tombol 'Buka di Google Drive' di bagian atas.");
         }
 
         const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
@@ -3843,11 +3963,14 @@
         `;
       } catch (err) {
         console.error("PDF Canvas Error:", err);
+        const fFolderId = extractFolderId((state.previewFile && state.previewFile.driveFolderId) || (state.settings && state.settings.googleDriveLink) || DEFAULT_GDRIVE_FOLDER_ID) || DEFAULT_GDRIVE_FOLDER_ID;
+        const driveHref = (state.previewFile && (state.previewFile.driveFileUrl || state.previewFile.driveUrl)) || `https://drive.google.com/drive/folders/${fFolderId}`;
         container.innerHTML = `
-          <div style="color:#fcd34d; text-align:center; padding:40px;">
-            <div style="font-size:36px; margin-bottom:8px;">⚠️</div>
-            <h4 style="font-size:14px; font-weight:800; color:white;">Gagal Merendisi Halaman PDF</h4>
-            <p style="font-size:11px; color:#cbd5e1; margin-top:4px;">${err.message || 'File PDF tidak dapat dibaca.'}</p>
+          <div style="color:#fcd34d; text-align:center; padding:40px 20px;">
+            <div style="font-size:36px; margin-bottom:8px;">☁️</div>
+            <h4 style="font-size:15px; font-weight:800; color:white;">Berkas Tersimpan di Google Drive</h4>
+            <p style="font-size:12px; color:#cbd5e1; margin-top:6px; margin-bottom:18px;">${err.message || 'Silakan buka berkas langsung melalui Google Drive.'}</p>
+            <a href="${driveHref}" target="_blank" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; width:auto; padding:10px 22px; font-size:13px; background:#0284c7; text-decoration:none; font-weight:800; border-radius:10px;">📂 Buka di Google Drive</a>
           </div>
         `;
       }
@@ -5075,12 +5198,12 @@
                 ` : isImage ? `
                   <button type="button" onclick="printCanvasPreview()" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #2563eb; width: auto; border-radius: 6px; font-weight: 700; white-space: nowrap;">🖨️ Cetak</button>
                 ` : ''}
-                <a href="${directDriveViewUrl || downloadUrl}" download="${fileName}" target="_blank" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #059669; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">⬇️ Download</a>
+                <a href="${(file.isBlobUrl && file.url) ? file.url : (directDriveViewUrl || downloadUrl)}" download="${fileName}" target="${(file.isBlobUrl && file.url) ? '_self' : '_blank'}" class="btn-primary" style="padding: 6px 12px; font-size: 11px; background: #059669; width: auto; text-decoration: none; border-radius: 6px; font-weight: 700; white-space: nowrap;">⬇️ Download</a>
               </div>
             </div>
 
             <div class="modal-body" style="padding: 0; background: #0f172a; position: relative;">
-              ${(hasDrivePreview && (isWord || isExcel || isPpt || isText || (isPdf && !file.isBlobUrl))) ? `
+              ${(hasDrivePreview && (isPpt || (!file.isBlobUrl && (isWord || isExcel || isText || isPdf)))) ? `
                 <div style="width: 100%; height: 80vh; min-height: 80vh; position: relative; background: #0f172a;">
                   <iframe src="${drivePreviewUrl}" width="100%" height="100%" style="border:none; width: 100%; height: 100%; min-height: 80vh; display: block; background: #ffffff;" allow="autoplay" loading="lazy"></iframe>
                 </div>
