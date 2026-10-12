@@ -1,8 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Sistem E-PKKS 2026</title>
   <!-- In-App Document Engines: PDF, DOCX, XLSX -->
   <script src="js/pdf.min.js"></script>
@@ -348,6 +351,107 @@
 
   
   <script>
+    // ============================================================================
+    // CLEAN SLATE V4 BOOT PURGE (JALAN OTOMATIS SAAT PERTAMA KALI DIBUKA DI HP/PC)
+    // Membersihkan 100% cache riwayat unggahan lama di localStorage & IndexedDB
+    // tanpa menghapus skor, catatan, atau pengaturan sekolah.
+    // ============================================================================
+    (function purgeOldUploadHistoryBoot() {
+      try {
+        const isResetDone = localStorage.getItem('pkks_clean_slate_v4') === 'done';
+        const isLoginResetDone = localStorage.getItem('pkks_login_reset_v5') === 'done';
+        const keys = Object.keys(localStorage);
+
+        // Pastikan sesi login tidak tersimpan permanen di localStorage (agar buka pertama kali selalu dari Login Sekolah)
+        localStorage.removeItem('pkks_current_user');
+        if (!isLoginResetDone) {
+          localStorage.removeItem('pkks_school_npsn');
+          localStorage.removeItem('pkks_school_name');
+          try {
+            sessionStorage.removeItem('pkks_school_npsn');
+            sessionStorage.removeItem('pkks_school_name');
+            sessionStorage.removeItem('pkks_current_user');
+          } catch (e) {}
+          localStorage.setItem('pkks_login_reset_v5', 'done');
+        }
+
+        // 1. Selalu hapus key metadata versi lama agar tidak pernah terbaca lagi
+        keys.forEach(k => {
+          if (k.startsWith('pkks_uploaded_files_meta_') || k.startsWith('pkks_deleted_files_') || k.startsWith('pkks_gdrive_meta_')) {
+            localStorage.removeItem(k);
+          }
+        });
+
+        if (!isResetDone) {
+          // Reset total seluruh riwayat file unggahan lama di semua akun guru pada perangkat ini
+          keys.forEach(k => {
+            if (k.startsWith('pkks_gdrive_files_v4_')) {
+              localStorage.removeItem(k);
+            }
+            if (k.startsWith('pkks_data_')) {
+              try {
+                const raw = localStorage.getItem(k);
+                if (raw) {
+                  const parsed = JSON.parse(raw);
+                  if (parsed && parsed.scores && typeof parsed.scores === 'object') {
+                    Object.keys(parsed.scores).forEach(code => {
+                      if (parsed.scores[code] && Array.isArray(parsed.scores[code].uploadedFiles)) {
+                        parsed.scores[code].uploadedFiles = [];
+                      }
+                    });
+                    localStorage.setItem(k, JSON.stringify(parsed));
+                  }
+                }
+              } catch (e) {}
+            }
+          });
+          // Bersihkan IndexedDB pkks_files_db lama
+          if (window.indexedDB) {
+            try { indexedDB.deleteDatabase('pkks_files_db'); } catch (e) {}
+          }
+          localStorage.setItem('pkks_clean_slate_v4', 'done');
+        } else {
+          // Pada setiap pembukaan berikutnya, pastikan pkks_data_* hanya menyimpan file yang terdaftar di pkks_gdrive_files_v4_*
+          const npsn = localStorage.getItem('pkks_school_npsn') || '20231556';
+          let activeMetaMap = {};
+          try {
+            const rawMeta = localStorage.getItem('pkks_gdrive_files_v4_' + npsn);
+            if (rawMeta) activeMetaMap = JSON.parse(rawMeta) || {};
+          } catch (e) {}
+          const activeMetaList = Object.values(activeMetaMap);
+
+          keys.forEach(k => {
+            if (k.startsWith(`pkks_data_${npsn}_`)) {
+              try {
+                const raw = localStorage.getItem(k);
+                if (raw) {
+                  const parsed = JSON.parse(raw);
+                  let changed = false;
+                  if (parsed && parsed.scores && typeof parsed.scores === 'object') {
+                    Object.keys(parsed.scores).forEach(code => {
+                      const itm = parsed.scores[code];
+                      if (itm && Array.isArray(itm.uploadedFiles)) {
+                        const before = itm.uploadedFiles.length;
+                        itm.uploadedFiles = itm.uploadedFiles.filter(uf => {
+                          return activeMetaList.some(cf => cf && (cf.id === uf.id || (cf.savedName && (cf.savedName === uf.savedName || cf.savedName === uf.name))));
+                        });
+                        if (itm.uploadedFiles.length !== before) changed = true;
+                      }
+                    });
+                    if (changed) {
+                      localStorage.setItem(k, JSON.stringify(parsed));
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Boot clean slate notice:", err);
+      }
+    })();
+
     const originalFetch = window.fetch;
     const isStaticDeploy = window.location.hostname.includes('github.io') || 
                            window.location.hostname.includes('pages.dev') ||
@@ -359,31 +463,8 @@
     const DEFAULT_GDRIVE_FOLDER_ID = "1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x";
     const DEFAULT_GDRIVE_EXEC_URL = "https://script.google.com/macros/s/AKfycbykNKnIhlwXTr-u6OX7rBbAmyyWq1J3OKtJUOQ5ocg1yowiyswFIUEByRbipMQN9qBM/exec";
 
-    // PEMETAAN ID GOOGLE DRIVE RESMI DARI FOLDER 1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x (SDIT ANNISA)
-    const KNOWN_GDRIVE_IDS = {
-      "Admin (Abdul Yakub, S.Ag)_20261010024033_kalandra.jpeg": "1zPGg9h2qfDTSMnOZMkrEIMQtcXAAMtNL",
-      "Admin (Abdul Yakub, S.Ag)_20261010024449_ilham.jpeg": "14WlSHMvQvQgZtS5O1r1MlOr2voobwJXC",
-      "N. Esthy Ening S., S.Sos_20261009042605_RPM_B._INDO__BAB_3_.docx": "1LlgvlayZidicpA3tS025wn3jyOzIn-wB",
-      "N. Esthy Ening S., S.Sos_20261009043109_RPM_B._INDO__BAB_1_.docx": "1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV",
-      "N. Esthy Ening S., S.Sos_20261009043136_RPM_PEND._PANCASILA__BAB_1_.docx": "1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh",
-      "N. Esthy Ening S., S.Sos_20261009043538_KSP_SDIT_ANNISA_2026-2027__1_.docx": "1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G",
-      "N. Esthy Ening S., S.Sos_20261009074317_17915317903917935861297302460581.jpg": "1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3",
-      "N. Esthy Ening S., S.Sos_20261009074330_17915318036342817169655685016059.jpg": "1Gi0ofc3376p-kRR9BByeVhZKlabM-gja",
-      "Susanti, S.Kom, S.Pd_20261009055930_IMG-20261009-WA0011.jpg": "1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2",
-      "Susanti, S.Kom, S.Pd_20261009072938_file_000000009d4881fa848358445b2691d7.png": "12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN",
-      "logo_sekolah_1791525039088_logo-annisa.png": "1vYNHMoezrz6Imwy0ASTj6t6_3ZjZQnd2",
-      "test_check.txt": "1yMsKQofOfFHlOrP2KcznPKHohXGx4ACh",
-      "kalandra.jpeg": "1zPGg9h2qfDTSMnOZMkrEIMQtcXAAMtNL",
-      "ilham.jpeg": "14WlSHMvQvQgZtS5O1r1MlOr2voobwJXC",
-      "RPM_B._INDO__BAB_3_.docx": "1LlgvlayZidicpA3tS025wn3jyOzIn-wB",
-      "RPM_B._INDO__BAB_1_.docx": "1LpyT0IPF042goLoF8BTQwLJeCLjsf_xV",
-      "RPM_PEND._PANCASILA__BAB_1_.docx": "1-5Tea1wK_-dcNfZTZIypIsVdyTGjbFgh",
-      "KSP_SDIT_ANNISA_2026-2027__1_.docx": "1d_zOAWIcX9vgj0IFR90JeNc80DWGsg_G",
-      "17915317903917935861297302460581.jpg": "1a37BIbh-L3gWvdtCXr5Oypneb9pj3Jw3",
-      "17915318036342817169655685016059.jpg": "1Gi0ofc3376p-kRR9BByeVhZKlabM-gja",
-      "IMG-20261009-WA0011.jpg": "1Rc7tFoHK64dWi1iZOIovLVl_-d6Nfej2",
-      "file_000000009d4881fa848358445b2691d7.png": "12HJLwd1tCycxLkMgeN3TosHqpq5ss_RN"
-    };
+    // PEMETAAN ID GOOGLE DRIVE (Mulai dari 0 / kosong sesuai isi Google Drive terbaru)
+    const KNOWN_GDRIVE_IDS = {};
 
     function resolveGdriveFileMeta(file) {
       if (!file) return null;
@@ -410,8 +491,6 @@
       return file;
     }
 
-    // INVENTORY OTOMATIS BERKAS GOOGLE DRIVE FOLDER 1_kO2Vv5xn7eiz-X4ht9iJ3LbRXliL07x (SDIT ANNISA)
-    // Tampil otomatis di HP / perangkat manapun tanpa klik manual!
     const INITIAL_GDRIVE_FILES = [];
 
     function normalizeFirebaseUrl(url) {
@@ -517,7 +596,7 @@
     }
 
     function getDeletedFilesSet(npsn) {
-      // Tombstones permanently disabled: Firebase Cloud /pkks_file_meta is the sole source of truth!
+      // Tombstones permanently disabled: Firebase Cloud /pkks_gdrive_files_v4 is the sole source of truth!
       return new Set();
     }
 
@@ -525,7 +604,7 @@
       npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
       let map = {};
       try {
-        const raw = localStorage.getItem('pkks_uploaded_files_meta_' + npsn);
+        const raw = localStorage.getItem('pkks_gdrive_files_v4_' + npsn);
         if (raw) map = JSON.parse(raw) || {};
       } catch(e) {}
       return map;
@@ -539,7 +618,7 @@
         const map = getLocalFileMetaMap(npsn);
         map[metaObj.id] = metaObj;
         if (metaObj.fileKey) map[metaObj.fileKey] = metaObj;
-        localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(map));
+        localStorage.setItem('pkks_gdrive_files_v4_' + npsn, JSON.stringify(map));
       } catch(e) {}
     }
 
@@ -555,13 +634,11 @@
             delete map[fid];
           }
         });
-        localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(map));
+        localStorage.setItem('pkks_gdrive_files_v4_' + npsn, JSON.stringify(map));
 
-        // Also clean from all local user data in this school
-        const settings = getSchoolSettings(npsn);
-        const allUserIds = new Set(['admin', 'all', ...(settings.users || []).map(u => u.id)]);
-        allUserIds.forEach(uid => {
-          const uDataKey = `pkks_data_${npsn}_${uid}`;
+        // Clean from ALL local user data keys in localStorage for this school
+        Object.keys(localStorage).forEach(uDataKey => {
+          if (!uDataKey.startsWith(`pkks_data_${npsn}_`)) return;
           const uRaw = localStorage.getItem(uDataKey);
           if (uRaw) {
             try {
@@ -795,9 +872,9 @@
           });
         }
 
-        // 2. Gunakan Firebase HANYA sebagai jembatan (sinkronisasi metadata & kepemilikan user tanpa menyimpan file/dataUrl)
+        // 2. Gunakan Firebase (/pkks_gdrive_files_v4) HANYA sebagai jembatan sinkronisasi metadata Google Drive
         if (!isLogo) {
-          await originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${safeFileId}.json`, {
+          await originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}/${safeFileId}.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(metaObj)
@@ -851,9 +928,9 @@
       try {
         const delPromises = [];
 
-        // 1. Fetch remote pkks_file_meta to catch ANY key with matching filename or id
+        // 1. Fetch remote pkks_gdrive_files_v4 to catch ANY key with matching filename or id
         try {
-          const remoteMeta = await originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+          const remoteMeta = await originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
           if (remoteMeta && typeof remoteMeta === 'object') {
             Object.keys(remoteMeta).forEach(rKey => {
               const rItem = remoteMeta[rKey];
@@ -869,10 +946,11 @@
           }
         } catch(e) {}
 
-        // 2. Delete from pkks_file_meta and pkks_files in Firebase
+        // 2. Delete from pkks_gdrive_files_v4, pkks_file_meta, and pkks_files in Firebase
         keysToDelete.forEach(sKey => {
           if (!sKey) return;
           delPromises.push(
+            originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}/${sKey}.json`, { method: 'DELETE' }),
             originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}/${sKey}.json`, { method: 'DELETE' }),
             originalFetch(`${baseUrl}/pkks_files/${safeNpsn}/${sKey}.json`, { method: 'DELETE' })
           );
@@ -953,21 +1031,24 @@
         const baseUrl = normalizeFirebaseUrl(firebaseUrl || s.appsScriptUrl);
         const safeNpsn = toFirebaseKey(npsn);
         const safeUser = toFirebaseKey(userId);
+        const activeMetaList = Object.values(getLocalFileMetaMap(npsn));
 
         const copy = JSON.parse(JSON.stringify(data));
         if (copy.scores) {
           Object.keys(copy.scores).forEach(itemId => {
             const itemVal = copy.scores[itemId];
             if (itemVal && Array.isArray(itemVal.uploadedFiles)) {
+              // Hanya simpan berkas yang benar-benar ada di registri aktif pkks_gdrive_files_v4
+              itemVal.uploadedFiles = itemVal.uploadedFiles.filter(f => {
+                if (!f) return false;
+                return activeMetaList.some(cf => cf && (cf.id === f.id || (cf.savedName && (cf.savedName === f.savedName || cf.savedName === f.name))));
+              });
               itemVal.uploadedFiles.forEach(f => {
                 if (f.url && f.url.startsWith('data:')) {
                   f.url = '';
                 }
                 if (!f.itemId) f.itemId = itemId;
                 if (!f.userId && userId !== 'all' && userId !== 'semua') f.userId = userId;
-                if (f.id && !(f.savedName || '').startsWith('logo_sekolah_')) {
-                  saveLocalFileMeta(npsn, f);
-                }
               });
             }
           });
@@ -997,8 +1078,8 @@
         const activeFolderId = extractFolderId(s.googleDriveLink || DEFAULT_GDRIVE_FOLDER_ID);
         const driveFolderUrl = `https://drive.google.com/drive/folders/${activeFolderId}`;
 
-        // 1. Fetch cloud records in parallel
-        const metaPromise = originalFetch(`${baseUrl}/pkks_file_meta/${safeNpsn}.json`)
+        // 1. Fetch cloud records in parallel (using fresh v4 Google Drive bridge path)
+        const metaPromise = originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}.json`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
         const dataPromise = originalFetch(`${baseUrl}/pkks_data/${safeNpsn}.json`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
@@ -1025,8 +1106,8 @@
           }
         }
 
-        // 2. Authoritative Cloud Files: /pkks_file_meta is the ONLY source of truth!
-        // If remoteMetaMap is null or empty, it means all files have been deleted from cloud
+        // 2. Authoritative Cloud Files: /pkks_gdrive_files_v4 is the ONLY source of truth!
+        // If remoteMetaMap is null or empty, it means 0 files exist in Google Drive
         const validCloudFiles = [];
         if (remoteMetaMap && typeof remoteMetaMap === 'object' && !remoteMetaMap.error) {
           Object.keys(remoteMetaMap).forEach(k => {
@@ -1070,14 +1151,13 @@
         }
 
         // 3. Mirror authoritative cloud file list to local storage
-        // Overwrite localStorage['pkks_uploaded_files_meta_' + npsn] so stale deleted files NEVER resurrect!
         const cleanCloudMap = {};
         validCloudFiles.forEach(f => {
           cleanCloudMap[f.id] = f;
           if (f.fileKey) cleanCloudMap[f.fileKey] = f;
         });
-        localStorage.setItem('pkks_uploaded_files_meta_' + npsn, JSON.stringify(cleanCloudMap));
-        // Remove any stale tombstones so newly uploaded files are never ghost-blocked
+        localStorage.setItem('pkks_gdrive_files_v4_' + npsn, JSON.stringify(cleanCloudMap));
+        localStorage.removeItem('pkks_uploaded_files_meta_' + npsn);
         localStorage.removeItem('pkks_deleted_files_' + npsn);
 
         // 4. Clean local user records & reconcile with validCloudFiles
@@ -1102,6 +1182,32 @@
             } catch(e) {}
           });
         }
+
+        // Also sweep ALL local pkks_data_${npsn}_* keys in localStorage (even teachers not in remoteDataRes)
+        Object.keys(localStorage).forEach(lKey => {
+          if (!lKey.startsWith(`pkks_data_${npsn}_`)) return;
+          try {
+            const raw = localStorage.getItem(lKey);
+            if (!raw) return;
+            const uData = JSON.parse(raw);
+            let changed = false;
+            if (uData && uData.scores) {
+              Object.keys(uData.scores).forEach(code => {
+                const itm = uData.scores[code];
+                if (itm && Array.isArray(itm.uploadedFiles)) {
+                  const before = itm.uploadedFiles.length;
+                  itm.uploadedFiles = itm.uploadedFiles.filter(uf => {
+                    return validCloudFiles.some(cf => cf.id === uf.id || (cf.savedName && (cf.savedName === uf.savedName || cf.savedName === uf.name)));
+                  });
+                  if (itm.uploadedFiles.length !== before) changed = true;
+                }
+              });
+            }
+            if (changed) {
+              localStorage.setItem(lKey, JSON.stringify(uData));
+            }
+          } catch(e) {}
+        });
 
         // 5. Update LIVE UI STATE (window.state.scores) INSTANTLY on Phone and PC
         if (window.state && window.state.scores) {
@@ -1193,7 +1299,7 @@
       // 1. Firebase SSE Listener for Realtime Metadata changes
       try {
         if (window.EventSource && !window._fbMetaEventSource) {
-          const metaUrl = `${baseUrl}/pkks_file_meta/${safeNpsn}.json`;
+          const metaUrl = `${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}.json`;
           const esMeta = new EventSource(metaUrl);
           ['put', 'patch', 'message'].forEach(evt => {
             esMeta.addEventListener(evt, triggerSync);
@@ -1508,22 +1614,22 @@
     function saveSchoolUserData(npsn, userId, data) {
       npsn = npsn || localStorage.getItem('pkks_school_npsn') || '20231556';
       if (!data) return;
+      const activeMetaList = Object.values(getLocalFileMetaMap(npsn));
 
-      // If saving in 'all' or 'admin' view, distribute each user's files only to their respective owner account
+      // Filter uploadedFiles so only files genuinely registered in pkks_gdrive_files_v4 are saved
       if (userId === 'all' || userId === 'semua' || userId === 'admin') {
         const scores = data.scores || {};
         Object.keys(scores).forEach(itemId => {
           const itemVal = scores[itemId];
           if (itemVal && Array.isArray(itemVal.uploadedFiles)) {
-            itemVal.uploadedFiles.forEach(uf => {
-              if (uf && uf.id && !(uf.savedName || '').startsWith('logo_sekolah_')) {
-                saveLocalFileMeta(npsn, Object.assign({ itemId: itemId }, uf));
-              }
+            itemVal.uploadedFiles = itemVal.uploadedFiles.filter(uf => {
+              if (!uf) return false;
+              return activeMetaList.some(cf => cf && (cf.id === uf.id || (cf.savedName && (cf.savedName === uf.savedName || cf.savedName === uf.name))));
             });
           }
         });
       } else {
-        // Ensure non-admin user data only stores their own files
+        // Ensure non-admin user data only stores their own valid cloud files
         const settings = getSchoolSettings(npsn);
         const userObj = (settings.users || []).find(u => u.id === userId);
         const uName = userObj ? userObj.name : userId;
@@ -1533,6 +1639,8 @@
           if (itemVal && Array.isArray(itemVal.uploadedFiles)) {
             itemVal.uploadedFiles = itemVal.uploadedFiles.filter(uf => {
               if (!uf) return false;
+              const isValidCloud = activeMetaList.some(cf => cf && (cf.id === uf.id || (cf.savedName && (cf.savedName === uf.savedName || cf.savedName === uf.name))));
+              if (!isValidCloud) return false;
               if (uf.userId && uf.userId !== userId) return false;
               if (!uf.userId && uf.user && uf.user !== 'Umum' && uf.user !== uName && uf.user !== userId) return false;
               return true;
@@ -1541,9 +1649,6 @@
               if (!uf.userId) uf.userId = userId;
               if (!uf.user || uf.user === 'Umum') uf.user = uName;
               if (!uf.itemId) uf.itemId = itemId;
-              if (uf.id && !(uf.savedName || '').startsWith('logo_sekolah_')) {
-                saveLocalFileMeta(npsn, uf);
-              }
             });
           }
         });
@@ -2064,17 +2169,13 @@
     class AppState {
       constructor() {
         this.currentUser = null;
-        this.schoolNpsn = localStorage.getItem('pkks_school_npsn') || '20231556';
-        this.schoolName = localStorage.getItem('pkks_school_name') || 'SDIT ANNISA BOGOR';
-        if (!localStorage.getItem('pkks_school_npsn')) {
-          try {
-            localStorage.setItem('pkks_school_npsn', '20231556');
-            localStorage.setItem('pkks_school_name', 'SDIT ANNISA BOGOR');
-          } catch(e) {}
-        }
+        this.schoolNpsn = null;
+        this.schoolName = null;
         try {
-          const savedUser = sessionStorage.getItem('pkks_current_user') || localStorage.getItem('pkks_current_user');
-          if (savedUser) {
+          this.schoolNpsn = sessionStorage.getItem('pkks_school_npsn') || null;
+          this.schoolName = sessionStorage.getItem('pkks_school_name') || null;
+          const savedUser = sessionStorage.getItem('pkks_current_user');
+          if (savedUser && this.schoolNpsn) {
             this.currentUser = JSON.parse(savedUser);
           }
         } catch(e) {}
@@ -2115,7 +2216,11 @@
       }
 
       async init() {
-        const npsn = this.schoolNpsn || '20231556';
+        if (!this.schoolNpsn) {
+          renderApp();
+          return;
+        }
+        const npsn = this.schoolNpsn;
         try {
           const res = await fetch('/api/settings');
           if (res.ok) {
@@ -2418,7 +2523,7 @@
           state.selectedTeacherId = (userObj.id === 'admin' || userObj.id === 'all' || userObj.id === 'semua') ? 'all' : userObj.id;
           try {
             sessionStorage.setItem('pkks_current_user', JSON.stringify(userObj));
-            localStorage.setItem('pkks_current_user', JSON.stringify(userObj));
+            localStorage.removeItem('pkks_current_user');
           } catch(e) {}
           await state.loadUserData();
           initRealtimeCloudListener(state.schoolNpsn);
@@ -2437,7 +2542,7 @@
           state.selectedTeacherId = (userObj.id === 'admin' || userObj.id === 'all' || userObj.id === 'semua') ? 'all' : userObj.id;
           try {
             sessionStorage.setItem('pkks_current_user', JSON.stringify(userObj));
-            localStorage.setItem('pkks_current_user', JSON.stringify(userObj));
+            localStorage.removeItem('pkks_current_user');
           } catch(e) {}
           await state.loadUserData();
           initRealtimeCloudListener(state.schoolNpsn);
@@ -2655,23 +2760,46 @@
       const driveUrl = prompt("Masukkan URL/Tautan Berkas Google Drive (contoh: https://drive.google.com/file/d/...):");
       if (!driveUrl) return;
 
+      const npsn = state.schoolNpsn || localStorage.getItem('pkks_school_npsn') || '20231556';
       const activeUserName = state.currentUser ? state.currentUser.name : "Umum";
       const activeUserId = state.currentUser ? state.currentUser.id : (state.activeDataUserId || 'admin');
       if (!state.scores[itemId]) state.scores[itemId] = {};
       if (!state.scores[itemId].uploadedFiles) state.scores[itemId].uploadedFiles = [];
 
-      state.scores[itemId].uploadedFiles.push({
-        id: 'gdrive_' + Date.now(),
+      const fId = 'gdrive_' + Date.now();
+      const newEntry = {
+        id: fId,
+        fileKey: fId,
         itemId: itemId,
         name: title,
         savedName: title,
+        originalName: title,
         url: driveUrl,
+        driveUrl: driveUrl,
         isDrive: true,
+        isFirebaseBridge: true,
         folder: 'Google Drive',
         user: activeUserName,
         userId: activeUserId,
-        size: 'Cloud Storage'
-      });
+        npsn: npsn,
+        size: 'Cloud Storage',
+        timestamp: Date.now()
+      };
+      resolveGdriveFileMeta(newEntry);
+      saveLocalFileMeta(npsn, newEntry);
+      try {
+        const s = getSchoolSettings(npsn);
+        const baseUrl = normalizeFirebaseUrl((state.settings && state.settings.appsScriptUrl) || s.appsScriptUrl);
+        const safeNpsn = toFirebaseKey(npsn);
+        const safeFileId = toFirebaseKey(fId);
+        await originalFetch(`${baseUrl}/pkks_gdrive_files_v4/${safeNpsn}/${safeFileId}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newEntry)
+        });
+      } catch(e) {}
+
+      state.scores[itemId].uploadedFiles.push(newEntry);
 
       await state.saveScores();
       state.showToast('✓ Link Google Drive berhasil ditambahkan!');
@@ -2858,8 +2986,15 @@
     async function superAdminEnterSchool(npsn, nama) {
       state.schoolNpsn = npsn;
       state.schoolName = nama;
-      localStorage.setItem('pkks_school_npsn', npsn);
-      localStorage.setItem('pkks_school_name', nama);
+      state.currentUser = null;
+      try {
+        sessionStorage.setItem('pkks_school_npsn', npsn);
+        sessionStorage.setItem('pkks_school_name', nama);
+        sessionStorage.removeItem('pkks_current_user');
+        localStorage.setItem('pkks_school_npsn', npsn);
+        localStorage.setItem('pkks_school_name', nama);
+        localStorage.removeItem('pkks_current_user');
+      } catch(e) {}
       state.superAdminDashboardOpen = false;
       await state.init();
       renderApp();
@@ -2972,8 +3107,15 @@
         if (res.ok && data.status === 'success') {
           state.schoolNpsn = npsn;
           state.schoolName = data.namaSekolah;
-          localStorage.setItem('pkks_school_npsn', npsn);
-          localStorage.setItem('pkks_school_name', data.namaSekolah);
+          state.currentUser = null;
+          try {
+            sessionStorage.setItem('pkks_school_npsn', npsn);
+            sessionStorage.setItem('pkks_school_name', data.namaSekolah);
+            sessionStorage.removeItem('pkks_current_user');
+            localStorage.setItem('pkks_school_npsn', npsn);
+            localStorage.setItem('pkks_school_name', data.namaSekolah);
+            localStorage.removeItem('pkks_current_user');
+          } catch(e) {}
           
           await state.init();
           renderApp();
@@ -2986,8 +3128,12 @@
       }
     }
     function handleSchoolLogout() {
-      localStorage.removeItem('pkks_school_npsn');
-      localStorage.removeItem('pkks_school_name');
+      try {
+        sessionStorage.removeItem('pkks_school_npsn');
+        sessionStorage.removeItem('pkks_school_name');
+        localStorage.removeItem('pkks_school_npsn');
+        localStorage.removeItem('pkks_school_name');
+      } catch(e) {}
       state.schoolNpsn = null;
       state.schoolName = null;
       handleLogout(); // also logout the user
